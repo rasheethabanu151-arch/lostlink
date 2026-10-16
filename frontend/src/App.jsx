@@ -136,6 +136,7 @@ function Feed() {
 
 function MyPosts() {
   const [posts, setPosts] = useState(null);
+  const nav = useNavigate();
   const load = () => api("/api/posts/mine").then(setPosts).catch(() => setPosts([]));
   useEffect(() => { load(); }, []);
 
@@ -155,7 +156,14 @@ function MyPosts() {
       <div className="wrap">
         <h3>My posts</h3>
         {posts === null && <p>Loading...</p>}
-        {posts && posts.length === 0 && <p><small>You haven't posted anything yet.</small></p>}
+        {posts && posts.length === 0 && (
+          <div className="empty">
+            <div className="emptyIcon">📭</div>
+            <p>You haven't posted anything yet.</p>
+            <button onClick={() => nav("/new")}>+ Create your first post</button>
+            <button className="link" onClick={() => nav("/feed")}>← Back to feed</button>
+          </div>
+        )}
         {posts && posts.map((p) => (
           <div key={p.id} className="card post">
             <div className="postlink">

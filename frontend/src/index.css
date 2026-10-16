@@ -40,3 +40,7 @@ small { color: #667; }
 .badge { display: inline-block; font-size: 12px; padding: 2px 8px; border-radius: 10px; margin-top: 4px; }
 .badge.open { background: #e8edfb; color: #2b50d8; }
 .badge.claimed { background: #e3f6e7; color: #2e7d32; }
+.empty { text-align: center; padding: 40px 16px; }
+.emptyIcon { font-size: 48px; margin-bottom: 8px; }
+.empty p { color: #667; margin-bottom: 16px; }
+.empty button { display: block; width: 100%; max-width: 280px; margin: 8px auto; }
