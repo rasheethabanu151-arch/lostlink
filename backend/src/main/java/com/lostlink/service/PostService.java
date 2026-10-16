@@ -55,10 +55,22 @@ public class PostService {
     return p.getId();
   }
 
+  private PostSummary toSummary(Post p, String username) {
+    return new PostSummary(p.getId(), p.getTitle(), p.getCategory(), p.getLocation(),
+      p.getDescription(), p.getCreatedAt(), p.getOwner().getUsername().equals(username),
+      p.getStatus(), p.getClaimedBy() == null ? null : p.getClaimedBy().getUsername());
+  }
+
   public List<PostSummary> list(String username) {
     return posts.findTop50ByStatusOrderByCreatedAtDesc("OPEN").stream()
-      .map(p -> new PostSummary(p.getId(), p.getTitle(), p.getCategory(), p.getLocation(),
-        p.getDescription(), p.getCreatedAt(), p.getOwner().getUsername().equals(username)))
+      .map(p -> toSummary(p, username))
+      .toList();
+  }
+
+  public List<PostSummary> mine(String username) {
+    User u = user(username);
+    return posts.findByOwnerIdOrderByCreatedAtDesc(u.getId()).stream()
+      .map(p -> toSummary(p, username))
       .toList();
   }
 
@@ -116,6 +128,9 @@ public class PostService {
       a.setFailures(0);
       a.setLockedUntil(null);
       attempts.save(a);
+      post.setStatus("CLAIMED");
+      post.setClaimedBy(user);
+      posts.save(post);
       result.put("verified", true);
       result.put("finder", post.getOwner().getUsername());
       result.put("contact", post.getOwner().getContact());

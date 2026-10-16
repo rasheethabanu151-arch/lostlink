@@ -18,7 +18,7 @@ public class AuthController {
 
   @PostMapping("/auth/login")
   public Map<String, String> login(@Valid @RequestBody AuthDtos.LoginRequest r) {
-    return Map.of("token", auth.login(r));
+    return auth.login(r);
   }
 
   @GetMapping("/health")

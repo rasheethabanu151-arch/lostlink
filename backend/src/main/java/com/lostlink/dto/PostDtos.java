@@ -17,7 +17,8 @@ public class PostDtos {
     String description,
     @NotNull @Size(min = 2) List<@Valid QuestionInput> questions) {}
   public record PostSummary(Long id, String title, String category, String location,
-                            String description, LocalDateTime createdAt, boolean mine) {}
+                            String description, LocalDateTime createdAt, boolean mine,
+                            String status, String claimedBy) {}
   public record QuestionView(Long id, String type, String text, List<String> options) {}
   public record AnswerInput(Long questionId, String answer) {}
   public record ClaimRequest(@NotNull List<AnswerInput> answers) {}

@@ -9,6 +9,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDateTime;
+import java.util.Map;
 
 @Service @RequiredArgsConstructor
 public class AuthService {
@@ -30,7 +31,7 @@ public class AuthService {
     users.save(u);
   }
 
-  public String login(AuthDtos.LoginRequest r) {
+  public Map<String, String> login(AuthDtos.LoginRequest r) {
     User u = users.findByEmail(r.email().trim().toLowerCase())
       .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials"));
     if (u.getLockedUntil() != null && u.getLockedUntil().isAfter(LocalDateTime.now()))
@@ -44,6 +45,6 @@ public class AuthService {
     u.setFailedLogins(0);
     u.setLockedUntil(null);
     users.save(u);
-    return jwt.generate(u.getUsername());
+    return Map.of("token", jwt.generate(u.getUsername()), "username", u.getUsername());
   }
 }

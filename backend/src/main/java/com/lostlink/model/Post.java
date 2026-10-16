@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 public class Post {
   @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
   @ManyToOne(optional = false) private User owner;
+  @ManyToOne private User claimedBy;
   private String title;
   private String category;
   private String location;

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate, Link, useNavigate, useParams } from "react-router-dom";
-import { api, getToken, setToken } from "./api";
+import { api, getToken, setToken, getUsername, setUsername } from "./api";
 
 const CATEGORIES = ["Phone", "Wallet", "Keys", "Bag", "Documents", "Other"];
 const ICONS = { Phone: "📱", Wallet: "👛", Keys: "🔑", Bag: "🎒", Documents: "🪪", Other: "📦" };
@@ -14,7 +14,11 @@ function Header() {
   return (
     <div className="header">
       <Link to="/feed" className="logo">🔗 LostLink</Link>
-      <button className="link" onClick={() => { setToken(null); nav("/"); }}>Logout</button>
+      <div className="hright">
+        <span className="hi">Hi, {getUsername()}</span>
+        <Link to="/my-posts" className="link navlink">My Posts</Link>
+        <button className="link" onClick={() => { setToken(null); setUsername(null); nav("/"); }}>Logout</button>
+      </div>
     </div>
   );
 }
@@ -52,6 +56,7 @@ function Auth() {
       } else {
         const r = await api("/api/auth/login", "POST", { email: f.email, password: f.password });
         setToken(r.token);
+        setUsername(r.username);
         nav("/feed");
       }
     } catch (e2) {
@@ -124,6 +129,54 @@ function Feed() {
           </div>
         ))}
         <button className="fab" onClick={() => nav("/new")}>+ New post</button>
+      </div>
+    </>
+  );
+}
+
+function MyPosts() {
+  const [posts, setPosts] = useState(null);
+  const load = () => api("/api/posts/mine").then(setPosts).catch(() => setPosts([]));
+  useEffect(() => { load(); }, []);
+
+  const del = async (id) => {
+    if (!window.confirm("Delete this post?")) return;
+    try {
+      await api("/api/posts/" + id, "DELETE");
+      load();
+    } catch (e) {
+      alert(e.message);
+    }
+  };
+
+  return (
+    <>
+      <Header />
+      <div className="wrap">
+        <h3>My posts</h3>
+        {posts === null && <p>Loading...</p>}
+        {posts && posts.length === 0 && <p><small>You haven't posted anything yet.</small></p>}
+        {posts && posts.map((p) => (
+          <div key={p.id} className="card post">
+            <div className="postlink">
+              <div className="icon">{ICONS[p.category] || "📦"}</div>
+              <div>
+                <b>{p.title}</b>
+                <div><small>{p.category} · {p.location}</small></div>
+                <div><small>{new Date(p.createdAt).toLocaleString()}</small></div>
+                <div>
+                  <span className={p.status === "CLAIMED" ? "badge claimed" : "badge open"}>
+                    {p.status === "CLAIMED" ? "✅ Claimed" : "Open"}
+                  </span>
+                  {p.status === "CLAIMED" && p.claimedBy && (
+                    <small> · verified by {p.claimedBy}</small>
+                  )}
+                </div>
+              </div>
+            </div>
+            <button className="del" onClick={() => del(p.id)}>🗑️ Delete</button>
+          </div>
+        ))}
       </div>
     </>
   );
@@ -282,6 +335,7 @@ export default function App() {
         <Route path="/" element={<Auth />} />
         <Route path="/feed" element={<Protected><Feed /></Protected>} />
         <Route path="/new" element={<Protected><CreatePost /></Protected>} />
+        <Route path="/my-posts" element={<Protected><MyPosts /></Protected>} />
         <Route path="/claim/:id" element={<Protected><Claim /></Protected>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
