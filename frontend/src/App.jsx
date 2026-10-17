@@ -65,9 +65,10 @@ function Auth() {
   };
 
   return (
-    <div className="wrap">
-      <h2>🔗 LostLink</h2>
-      <p><small>Lost something? Found something? Connect safely.</small></p>
+    <div className="wrap authWrap">
+      <div className="logoBadge">🔗</div>
+      <h2>LostLink</h2>
+      <p className="tagline">Lost something? Found something? Connect safely.</p>
       <form className="card" onSubmit={submit}>
         <h3>{mode === "login" ? "Login" : "Register"}</h3>
         {mode === "register" && (
@@ -111,7 +112,7 @@ function Feed() {
   return (
     <>
       <Header />
-      <div className="wrap">
+      <div className="wrap feedWrap">
         <h3>Latest found items</h3>
         {posts === null && <p>Loading...</p>}
         {posts && posts.length === 0 && <p><small>No items yet. Tap + to post one.</small></p>}
