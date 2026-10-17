@@ -44,3 +44,19 @@ small { color: #667; }
 .emptyIcon { font-size: 48px; margin-bottom: 8px; }
 .empty p { color: #667; margin-bottom: 16px; }
 .empty button { display: block; width: 100%; max-width: 280px; margin: 8px auto; }
+.removeQ { background: #fff; color: #c62828; border: 1px solid #c62828; padding: 6px 10px; font-size: 13px; align-self: flex-end; }
+.chatFrame { border: 1px solid #e3e8f0; border-radius: 16px; overflow: hidden; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,.06); margin-top: 12px; }
+.chatHeader { display: flex; align-items: center; gap: 10px; padding: 14px 16px; background: linear-gradient(135deg, #2b50d8, #4a6ef0); color: #fff; }
+.chatAvatar { width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,.2); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.chatName { font-weight: 700; font-size: 15px; }
+.chatSub { font-weight: 400; font-size: 12px; opacity: .85; margin-left: 6px; }
+.chatStatus { font-size: 12px; opacity: .9; display: flex; align-items: center; gap: 5px; margin-top: 2px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 0 2px rgba(74,222,128,.35); display: inline-block; }
+.chatBody { padding: 16px; background: #f4f6fb; min-height: 120px; }
+.msgRow { display: flex; flex-direction: column; margin: 8px 0; }
+.msgRow.fromMe { align-items: flex-end; }
+.msgRow.fromBot { align-items: flex-start; }
+.bubble { max-width: 80%; padding: 10px 14px; border-radius: 16px; font-size: 14px; line-height: 1.4; }
+.bubble.fromBot { background: #e8edfb; color: #1b2430; border-bottom-left-radius: 4px; }
+.bubble.fromMe { background: #2b50d8; color: #fff; border-bottom-right-radius: 4px; }
+.msgTime { font-size: 11px; color: #99a; margin-top: 3px; padding: 0 4px; }

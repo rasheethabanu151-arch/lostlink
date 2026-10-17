@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { BrowserRouter, Routes, Route, Navigate, Link, useNavigate, useParams } from "react-router-dom";
 import { api, getToken, setToken, getUsername, setUsername } from "./api";
 
@@ -237,6 +237,11 @@ function CreatePost() {
         <small>The owner must answer these. Pick the correct option with the radio button.</small>
         {qs.map((q, i) => (
           <div className="card" key={i}>
+            {qs.length > 2 && (
+              <button type="button" className="removeQ" onClick={() => setQs(qs.filter((_, j) => j !== i))}>
+                ✕ Remove this question
+              </button>
+            )}
             <select value={q.type} onChange={(e) => upd(i, { type: e.target.value })}>
               <option value="BASIC">Basic question</option>
               <option value="UNIQUE">Unique (secret) question</option>
@@ -271,17 +276,22 @@ function Claim() {
   const [qs, setQs] = useState([]);
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState([]);
+  const [times, setTimes] = useState([]);
   const [result, setResult] = useState(null);
   const [err, setErr] = useState("");
+  const startTime = useRef(new Date());
 
   useEffect(() => {
     api("/api/posts/" + id + "/questions").then(setQs).catch((e) => setErr(e.message));
   }, [id]);
 
+  const fmt = (d) => d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
   const pick = async (opt) => {
     const q = qs[step];
     const next = [...answers, { questionId: q.id, answer: opt }];
     setAnswers(next);
+    setTimes([...times, new Date()]);
     if (step + 1 < qs.length) {
       setStep(step + 1);
     } else {
@@ -297,40 +307,60 @@ function Claim() {
     <>
       <Header />
       <div className="wrap">
-        <h3>Verify ownership</h3>
-        <div className="bot">Hi! Answer a few questions to prove this item is yours.</div>
-        {qs.map((q, i) => i <= step && (
-          <div key={q.id}>
-            {q.type === "UNIQUE" && (i === 0 || qs[i - 1].type === "BASIC") && (
-              <div className="bot">Now a few more detailed questions.</div>
+        <div className="chatFrame">
+          <div className="chatHeader">
+            <div className="chatAvatar">🔗</div>
+            <div className="chatHeaderText">
+              <div className="chatName">LostLink <span className="chatSub">AI Verification</span></div>
+              <div className="chatStatus"><span className="dot" /> Online</div>
+            </div>
+          </div>
+          <div className="chatBody">
+            <div className="msgRow fromBot">
+              <div className="bubble fromBot">Hi! Answer a few questions to prove this item is yours.</div>
+              <div className="msgTime">{fmt(startTime.current)}</div>
+            </div>
+            {qs.map((q, i) => i <= step && (
+              <div key={q.id}>
+                {q.type === "UNIQUE" && (i === 0 || qs[i - 1].type === "BASIC") && (
+                  <div className="msgRow fromBot">
+                    <div className="bubble fromBot">Now a few more detailed questions.</div>
+                  </div>
+                )}
+                <div className="msgRow fromBot">
+                  <div className="bubble fromBot">{q.text}</div>
+                </div>
+                {answers[i] ? (
+                  <div className="msgRow fromMe">
+                    <div className="bubble fromMe">{answers[i].answer}</div>
+                    <div className="msgTime">{times[i] ? fmt(times[i]) : ""}</div>
+                  </div>
+                ) : (
+                  <div className="opts">
+                    {q.options.map((o) => (
+                      <button key={o} className="opt" onClick={() => pick(o)}>{o}</button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+            {err && <div className="err">{err}</div>}
+            {result && result.verified && (
+              <div className="result">
+                <h3>✅ Verified</h3>
+                <p>Contact {result.finder}:</p>
+                <h2><a href={"tel:" + result.contact}>{result.contact}</a></h2>
+              </div>
             )}
-            <div className="bot">{q.text}</div>
-            {answers[i] ? (
-              <div className="me">{answers[i].answer}</div>
-            ) : (
-              <div className="opts">
-                {q.options.map((o) => (
-                  <button key={o} className="opt" onClick={() => pick(o)}>{o}</button>
-                ))}
+            {result && !result.verified && (
+              <div className="result">
+                <h3>⚠️ {result.message}</h3>
+                <p><small>You have limited attempts for each item.</small></p>
+                <Link to="/feed">Back to items</Link>
               </div>
             )}
           </div>
-        ))}
-        {err && <div className="err">{err}</div>}
-        {result && result.verified && (
-          <div className="result">
-            <h3>✅ Verified</h3>
-            <p>Contact {result.finder}:</p>
-            <h2><a href={"tel:" + result.contact}>{result.contact}</a></h2>
-          </div>
-        )}
-        {result && !result.verified && (
-          <div className="result">
-            <h3>⚠️ {result.message}</h3>
-            <p><small>You have limited attempts for each item.</small></p>
-            <Link to="/feed">Back to items</Link>
-          </div>
-        )}
+        </div>
       </div>
     </>
   );
