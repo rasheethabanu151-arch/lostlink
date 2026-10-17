@@ -279,11 +279,18 @@ function Claim() {
   const [times, setTimes] = useState([]);
   const [result, setResult] = useState(null);
   const [err, setErr] = useState("");
+  const [hue, setHue] = useState(280);
   const startTime = useRef(new Date());
+  const bodyRef = useRef(null);
 
   useEffect(() => {
     api("/api/posts/" + id + "/questions").then(setQs).catch((e) => setErr(e.message));
   }, [id]);
+
+  const onScroll = (e) => {
+    const h = 280 + (e.target.scrollTop % 360);
+    setHue(h);
+  };
 
   const fmt = (d) => d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
@@ -303,37 +310,52 @@ function Claim() {
     }
   };
 
+  const bodyStyle = {
+    background: `linear-gradient(160deg, hsl(${hue},85%,92%), hsl(${(hue + 60) % 360},85%,94%), hsl(${(hue + 120) % 360},85%,92%))`,
+  };
+
   return (
     <>
       <Header />
       <div className="wrap">
         <div className="chatFrame">
           <div className="chatHeader">
-            <div className="chatAvatar">🔗</div>
+            <div className="chatAvatar">✨</div>
             <div className="chatHeaderText">
               <div className="chatName">LostLink <span className="chatSub">AI Verification</span></div>
-              <div className="chatStatus"><span className="dot" /> Online</div>
+              <div className="chatStatus"><span className="dot" /> Online now</div>
             </div>
           </div>
-          <div className="chatBody">
+          <div className="chatBody" style={bodyStyle} onScroll={onScroll} ref={bodyRef}>
             <div className="msgRow fromBot">
-              <div className="bubble fromBot">Hi! Answer a few questions to prove this item is yours.</div>
-              <div className="msgTime">{fmt(startTime.current)}</div>
+              <div className="botAvatar">🤖</div>
+              <div className="bubbleCol">
+                <div className="bubble fromBot">Hi! Answer a few questions to prove this item is yours.</div>
+                <div className="msgTime">{fmt(startTime.current)}</div>
+              </div>
             </div>
             {qs.map((q, i) => i <= step && (
               <div key={q.id}>
                 {q.type === "UNIQUE" && (i === 0 || qs[i - 1].type === "BASIC") && (
                   <div className="msgRow fromBot">
-                    <div className="bubble fromBot">Now a few more detailed questions.</div>
+                    <div className="botAvatar">🤖</div>
+                    <div className="bubbleCol">
+                      <div className="bubble fromBot">Now a few more detailed questions.</div>
+                    </div>
                   </div>
                 )}
                 <div className="msgRow fromBot">
-                  <div className="bubble fromBot">{q.text}</div>
+                  <div className="botAvatar">🤖</div>
+                  <div className="bubbleCol">
+                    <div className="bubble fromBot">{q.text}</div>
+                  </div>
                 </div>
                 {answers[i] ? (
                   <div className="msgRow fromMe">
-                    <div className="bubble fromMe">{answers[i].answer}</div>
-                    <div className="msgTime">{times[i] ? fmt(times[i]) : ""}</div>
+                    <div className="bubbleCol alignRight">
+                      <div className="bubble fromMe">{answers[i].answer}</div>
+                      <div className="msgTime">{times[i] ? fmt(times[i]) : ""}</div>
+                    </div>
                   </div>
                 ) : (
                   <div className="opts">
@@ -359,6 +381,10 @@ function Claim() {
                 <Link to="/feed">Back to items</Link>
               </div>
             )}
+          </div>
+          <div className="chatInputBar">
+            <input className="fakeInput" placeholder="Choose an option above" disabled />
+            <button className="fakeSend" disabled>Send</button>
           </div>
         </div>
       </div>
