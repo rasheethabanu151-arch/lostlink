@@ -217,3 +217,34 @@ body {
   .authWrap h2 { font-size: 26px; }
   .step small { display: none; }
 }
+
+/* ===== Photo backgrounds ===== */
+
+/* Login page */
+body:has(.authWrap) {
+  background:
+    linear-gradient(rgba(10,12,45,.62), rgba(20,10,60,.72)),
+    url("/login-bg.jpg") center / cover no-repeat fixed;
+}
+body:has(.authWrap)::before { content: none; animation: none; }
+
+/* Remove the logo icon above the title, keep the LostLink word */
+.authWrap .logoBadge { display: none; }
+.authWrap h2 { margin-top: 0; font-size: 38px; }
+
+/* Dashboard and all pages after login */
+body {
+  background:
+    linear-gradient(rgba(244,247,255,.78), rgba(234,246,246,.82)),
+    url("/dashboard-bg.jpg") center / cover no-repeat fixed;
+  min-height: 100vh;
+}
+
+/* ===== Custom themed backgrounds (SVG) ===== */
+body:has(.authWrap) {
+  background: #0b1437 url("/login-bg.svg") center / cover no-repeat fixed;
+}
+body {
+  background: #f1f4ff url("/dashboard-bg.svg") center / cover no-repeat fixed;
+  min-height: 100vh;
+}
