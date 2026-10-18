@@ -81,7 +81,17 @@ function Auth() {
     <div className="wrap authWrap">
       <div className="logoBadge">🔗</div>
       <h2>LostLink</h2>
-      <p className="tagline">Lost something? Found something? Connect safely.</p>
+      <p className="subtitle">Lost &amp; Found Management System</p>
+      <p className="tagline">
+        Report a lost or found item in seconds. LostLink suggests matches by category and
+        location, and contact details are shared only after the finder's verification
+        questions are answered correctly.
+      </p>
+      <div className="steps">
+        <div className="step"><span>📝</span><b>Post</b><small>Report lost or found</small></div>
+        <div className="step"><span>🔍</span><b>Match</b><small>Smart suggestions</small></div>
+        <div className="step"><span>🔐</span><b>Verify</b><small>Answer to claim</small></div>
+      </div>
       <form className="card" onSubmit={submit}>
         <h3>{mode === "login" ? "Login" : "Register"}</h3>
         {mode === "register" && (
