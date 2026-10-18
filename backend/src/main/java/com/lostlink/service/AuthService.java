@@ -19,9 +19,9 @@ public class AuthService {
 
   public void register(AuthDtos.RegisterRequest r) {
     String email = r.email().trim().toLowerCase();
-    if (users.existsByUsername(r.username())) throw new ResponseStatusException(HttpStatus.CONFLICT, "Username already taken");
-    if (users.existsByEmail(email)) throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already registered");
-    if (users.existsByContact(r.contact())) throw new ResponseStatusException(HttpStatus.CONFLICT, "Contact already registered");
+    if (users.existsByUsername(r.username())) throw new ResponseStatusException(HttpStatus.CONFLICT, "This username is already taken. Please choose another one.");
+    if (users.existsByEmail(email)) throw new ResponseStatusException(HttpStatus.CONFLICT, "This email is already registered. Please login instead.");
+    if (users.existsByContact(r.contact())) throw new ResponseStatusException(HttpStatus.CONFLICT, "This mobile number is already registered with another account. Please login or use a different number.");
     User u = new User();
     u.setUsername(r.username());
     u.setEmail(email);
