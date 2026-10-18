@@ -286,6 +286,7 @@ function CreatePost() {
 }
 
 function Claim() {
+  const nav = useNavigate();
   const { id } = useParams();
   const [qs, setQs] = useState([]);
   const [step, setStep] = useState(0);
@@ -410,8 +411,8 @@ function Claim() {
             <button className="fakeSend" disabled>Send</button>
           </div>
         </div>
-        {step > 0 && !result && (
-          <button className="belowChatBack" onClick={back}>⬅ Back to previous question</button>
+        {!result && (
+          <button className="belowChatBack" onClick={() => nav("/feed")}>⬅ Back to Dashboard</button>
         )}
       </div>
     </>

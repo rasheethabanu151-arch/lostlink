@@ -120,3 +120,8 @@ body { background: linear-gradient(135deg, #eef1fb 0%, #e6ecfb 40%, #f3eefb 100%
 /* ===== Back button below the chat frame ===== */
 .belowChatBack { display: block; margin: 14px auto 0; background: #f1eefc; color: #7b2ff7; border: 1px dashed #c9b6f5; border-radius: 10px; padding: 10px 18px; font-size: 14px; font-weight: 600; cursor: pointer; }
 .belowChatBack:hover { background: #e7defa; }
+
+
+/* ===== Header spacing fix ===== */
+.hrow2Inner { width: 100%; gap: 20px; }
+.dashLabel { margin-right: auto; }
