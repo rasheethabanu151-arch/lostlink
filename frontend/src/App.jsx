@@ -18,7 +18,10 @@ function Header() {
       </div>
       <div className="hrow2">
         <div className="hrow2Inner">
-          <Link to="/feed" className="dashLabel">Dashboard</Link>
+          <div className="navTabs">
+            <Link to="/feed" className="dashLabel">Dashboard</Link>
+            <Link to="/suggestions" className="dashLabel">Suggestions</Link>
+          </div>
           <div className="hright">
             <span className="hi">Hi, {getUsername()}</span>
             <Link to="/my-posts" className="link navlink">My Posts</Link>
@@ -123,19 +126,32 @@ function Feed() {
     <>
       <Header />
       <div className="wrap feedWrap">
-        <h3>Latest found items</h3>
+        <h3>Latest items</h3>
         {posts === null && <p>Loading...</p>}
         {posts && posts.length === 0 && <p><small>No items yet. Tap + to post one.</small></p>}
         {posts && posts.map((p) => (
           <div key={p.id} className="card post">
-            <Link to={"/claim/" + p.id} className="postlink">
-              <div className="icon">{ICONS[p.category] || "📦"}</div>
-              <div>
-                <b>{p.title}</b>
-                <div><small>{p.category} · {p.location}{p.mine ? " · Your post" : ""}</small></div>
-                <div><small>{new Date(p.createdAt).toLocaleString()}</small></div>
+            {p.type === "LOST" ? (
+              <div className="postlink">
+                <div className="icon">{ICONS[p.category] || "📦"}</div>
+                <div>
+                  <span className="badge lost">Lost</span>
+                  <b> {p.title}</b>
+                  <div><small>{p.category} · {p.location}{p.mine ? " · Your post" : ""}</small></div>
+                  <div><small>{new Date(p.createdAt).toLocaleString()}</small></div>
+                </div>
               </div>
-            </Link>
+            ) : (
+              <Link to={"/claim/" + p.id} className="postlink">
+                <div className="icon">{ICONS[p.category] || "📦"}</div>
+                <div>
+                  <span className="badge found">Found</span>
+                  <b> {p.title}</b>
+                  <div><small>{p.category} · {p.location}{p.mine ? " · Your post" : ""}</small></div>
+                  <div><small>{new Date(p.createdAt).toLocaleString()}</small></div>
+                </div>
+              </Link>
+            )}
             {p.mine && <button className="del" onClick={() => del(p.id)}>🗑️ Delete</button>}
           </div>
         ))}
@@ -180,7 +196,8 @@ function MyPosts() {
             <div className="postlink">
               <div className="icon">{ICONS[p.category] || "📦"}</div>
               <div>
-                <b>{p.title}</b>
+                <span className={p.type === "LOST" ? "badge lost" : "badge found"}>{p.type === "LOST" ? "Lost" : "Found"}</span>
+                <b> {p.title}</b>
                 <div><small>{p.category} · {p.location}</small></div>
                 <div><small>{new Date(p.createdAt).toLocaleString()}</small></div>
                 <div>
@@ -201,11 +218,56 @@ function MyPosts() {
   );
 }
 
+function Suggestions() {
+  const [groups, setGroups] = useState(null);
+  useEffect(() => { api("/api/posts/suggestions").then(setGroups).catch(() => setGroups([])); }, []);
+  return (
+    <>
+      <Header />
+      <div className="wrap feedWrap">
+        <h3>Suggestions</h3>
+        {groups === null && <p>Loading...</p>}
+        {groups && groups.length === 0 && <p><small>No suggestions yet. Check back once more items are posted.</small></p>}
+        {groups && groups.map((g) => (
+          <div key={g.myPost.id} className="card suggestGroup">
+            <div className="suggestMine">
+              <span className={g.myPost.type === "LOST" ? "badge lost" : "badge found"}>
+                {g.myPost.type === "LOST" ? "Your Lost post" : "Your Found post"}
+              </span>
+              <b> {g.myPost.title}</b>
+            </div>
+            {g.matches.map((m) => (
+              m.type === "FOUND" ? (
+                <Link key={m.id} to={"/claim/" + m.id} className="suggestMatch">
+                  <div className="icon">{ICONS[m.category] || "📦"}</div>
+                  <div>
+                    <b>{m.title}</b>
+                    <div><small>{m.category} · {m.location}</small></div>
+                  </div>
+                  <span className="suggestCta">Verify &amp; claim →</span>
+                </Link>
+              ) : (
+                <div key={m.id} className="suggestMatch info">
+                  <div className="icon">{ICONS[m.category] || "📦"}</div>
+                  <div>
+                    <b>{m.title}</b>
+                    <div><small>{m.category} · {m.location} · someone may be looking for this</small></div>
+                  </div>
+                </div>
+              )
+            ))}
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
 const blankQ = (type) => ({ type, text: "", count: 4, options: ["", "", "", "", ""], correctIdx: -1 });
 
 function CreatePost() {
   const nav = useNavigate();
-  const [p, setP] = useState({ title: "", category: "Phone", location: "", description: "" });
+  const [p, setP] = useState({ type: "FOUND", title: "", category: "Phone", location: "", description: "" });
   const [qs, setQs] = useState([blankQ("BASIC"), blankQ("UNIQUE")]);
   const [err, setErr] = useState("");
   const upd = (i, patch) => setQs(qs.map((q, j) => (j === i ? { ...q, ...patch } : q)));
@@ -234,13 +296,17 @@ function CreatePost() {
     <>
       <Header />
       <div className="wrap">
-        <h3>Post a found item</h3>
+        <h3>{p.type === "LOST" ? "Post a lost item" : "Post a found item"}</h3>
+        <div className="typeToggle">
+          <button type="button" className={p.type === "FOUND" ? "typeBtn active" : "typeBtn"} onClick={() => setP({ ...p, type: "FOUND" })}>I found something</button>
+          <button type="button" className={p.type === "LOST" ? "typeBtn active" : "typeBtn"} onClick={() => setP({ ...p, type: "LOST" })}>I lost something</button>
+        </div>
         <div className="card">
-          <input placeholder="Title (e.g. Phone found near bus stand)" value={p.title} onChange={(e) => setP({ ...p, title: e.target.value })} />
+          <input placeholder={p.type === "LOST" ? "Title (e.g. Lost my water bottle)" : "Title (e.g. Phone found near bus stand)"} value={p.title} onChange={(e) => setP({ ...p, title: e.target.value })} />
           <select value={p.category} onChange={(e) => setP({ ...p, category: e.target.value })}>
             {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
           </select>
-          <input placeholder="Where did you find it?" value={p.location} onChange={(e) => setP({ ...p, location: e.target.value })} />
+          <input placeholder={p.type === "LOST" ? "Where did you lose it?" : "Where did you find it?"} value={p.location} onChange={(e) => setP({ ...p, location: e.target.value })} />
           <textarea placeholder="Short description (do not include private details)" value={p.description} onChange={(e) => setP({ ...p, description: e.target.value })} />
         </div>
 
@@ -422,6 +488,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Auth />} />
         <Route path="/feed" element={<Protected><Feed /></Protected>} />
+        <Route path="/suggestions" element={<Protected><Suggestions /></Protected>} />
         <Route path="/new" element={<Protected><CreatePost /></Protected>} />
         <Route path="/my-posts" element={<Protected><MyPosts /></Protected>} />
         <Route path="/claim/:id" element={<Protected><Claim /></Protected>} />

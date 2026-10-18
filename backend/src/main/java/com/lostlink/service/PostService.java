@@ -29,12 +29,16 @@ public class PostService {
   @Transactional
   public Long create(String username, CreatePostRequest r) {
     User owner = user(username);
+    String postType = r.type() == null ? "FOUND" : r.type().toUpperCase();
+    if (!postType.equals("LOST") && !postType.equals("FOUND"))
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Type must be LOST or FOUND");
     long basic = r.questions().stream().filter(q -> q.type().equalsIgnoreCase("BASIC")).count();
     long unique = r.questions().stream().filter(q -> q.type().equalsIgnoreCase("UNIQUE")).count();
     if (basic < 1 || unique < 1)
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Add at least one basic and one unique question");
     Post p = new Post();
     p.setOwner(owner);
+    p.setType(postType);
     p.setTitle(r.title());
     p.setCategory(r.category());
     p.setLocation(r.location());
@@ -58,7 +62,8 @@ public class PostService {
   private PostSummary toSummary(Post p, String username) {
     return new PostSummary(p.getId(), p.getTitle(), p.getCategory(), p.getLocation(),
       p.getDescription(), p.getCreatedAt(), p.getOwner().getUsername().equals(username),
-      p.getStatus(), p.getClaimedBy() == null ? null : p.getClaimedBy().getUsername());
+      p.getStatus(), p.getClaimedBy() == null ? null : p.getClaimedBy().getUsername(),
+      p.getType() == null ? "FOUND" : p.getType());
   }
 
   public List<PostSummary> list(String username) {
@@ -72,6 +77,36 @@ public class PostService {
     return posts.findByOwnerIdOrderByCreatedAtDesc(u.getId()).stream()
       .map(p -> toSummary(p, username))
       .toList();
+  }
+
+  private boolean locationMatches(String a, String b) {
+    String na = norm(a), nb = norm(b);
+    if (na.isBlank() || nb.isBlank()) return false;
+    if (na.contains(nb) || nb.contains(na)) return true;
+    for (String w : na.split("\\s+")) {
+      if (w.length() > 2 && nb.contains(w)) return true;
+    }
+    return false;
+  }
+
+  public List<SuggestionGroup> suggestionsFor(String username) {
+    User u = user(username);
+    List<Post> mine = posts.findByOwnerIdOrderByCreatedAtDesc(u.getId()).stream()
+      .filter(p -> "OPEN".equals(p.getStatus()))
+      .toList();
+    List<SuggestionGroup> out = new ArrayList<>();
+    for (Post m : mine) {
+      String myType = m.getType() == null ? "FOUND" : m.getType();
+      String oppositeType = myType.equals("LOST") ? "FOUND" : "LOST";
+      List<PostSummary> matches = posts.findByStatusAndType("OPEN", oppositeType).stream()
+        .filter(c -> !c.getOwner().getId().equals(u.getId()))
+        .filter(c -> norm(c.getCategory()).equals(norm(m.getCategory())))
+        .filter(c -> locationMatches(m.getLocation(), c.getLocation()))
+        .map(c -> toSummary(c, username))
+        .toList();
+      if (!matches.isEmpty()) out.add(new SuggestionGroup(toSummary(m, username), matches));
+    }
+    return out;
   }
 
   @Transactional

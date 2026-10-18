@@ -6,4 +6,5 @@ import java.util.List;
 public interface PostRepository extends JpaRepository<Post, Long> {
   List<Post> findTop50ByStatusOrderByCreatedAtDesc(String status);
   List<Post> findByOwnerIdOrderByCreatedAtDesc(Long ownerId);
+  List<Post> findByStatusAndType(String status, String type);
 }

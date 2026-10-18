@@ -23,6 +23,9 @@ public class PostController {
   @GetMapping("/mine")
   public List<PostSummary> mine(Authentication auth) { return svc.mine(auth.getName()); }
 
+  @GetMapping("/suggestions")
+  public List<SuggestionGroup> suggestions(Authentication auth) { return svc.suggestionsFor(auth.getName()); }
+
   @DeleteMapping("/{id}")
   public Map<String, String> delete(Authentication auth, @PathVariable Long id) {
     svc.delete(auth.getName(), id);
