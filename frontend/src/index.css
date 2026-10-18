@@ -287,3 +287,36 @@ body {
   background-attachment: fixed;
   min-height: 100vh;
 }
+
+/* ===== Admin panel + Support ===== */
+.adminWrap { max-width: 1100px; margin: 0 auto; padding: 16px; }
+.tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+.tab { border: 1px solid #e3e6f5; background: #fff; color: #3b3f66; padding: 9px 16px; border-radius: 999px; font-weight: 600; cursor: pointer; }
+.tab.active { background: linear-gradient(135deg, #7b2ff7, #6a5cf0, #9b4de0); color: #fff; border-color: transparent; box-shadow: 0 4px 14px rgba(123,47,247,.3); }
+.tab.refresh { margin-left: auto; }
+.statGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 14px; }
+.stat { background: #fff; border: 1px solid #eceffa; border-radius: 16px; padding: 18px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,.05); }
+.statIcon { font-size: 26px; }
+.statNum { font-size: 34px; font-weight: 800; color: #1b2430; line-height: 1.2; }
+.statLabel { color: #667; font-size: 13px; }
+.tblWrap { overflow-x: auto; background: #fff; border: 1px solid #eceffa; border-radius: 14px; margin-bottom: 18px; }
+.tbl { width: 100%; border-collapse: collapse; font-size: 14px; }
+.tbl th { text-align: left; background: #f4f6ff; color: #3b3f66; padding: 10px 12px; white-space: nowrap; }
+.tbl td { padding: 10px 12px; border-top: 1px solid #eef0fa; white-space: nowrap; }
+.pill { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; margin-left: 6px; }
+.pillLost { background: #fde7ec; color: #c0264b; }
+.pillFound { background: #def7ec; color: #0b7a55; }
+.secTitle { margin: 22px 0 10px; font-size: 18px; font-weight: 800; color: #1b2430; }
+.emptyBox { background: rgba(255,255,255,.8); border: 1px dashed #c9cff0; border-radius: 14px; padding: 22px; text-align: center; color: #667; margin-bottom: 14px; }
+.msgCard { margin-bottom: 12px; background: #fff; border-radius: 14px; padding: 14px 16px; border: 1px solid #eceffa; }
+.msgTop { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.msgDate { margin-left: auto; font-size: 12px; }
+.msgText { margin: 8px 0; white-space: pre-wrap; }
+.muted { color: #778; font-size: 13px; }
+.replyBox { background: #f4f6ff; border-radius: 10px; padding: 8px 12px; margin-top: 8px; }
+.replyBox p { margin: 4px 0 0; white-space: pre-wrap; }
+.replyBtn { margin-top: 8px; border: none; border-radius: 10px; padding: 9px 16px; color: #fff; font-weight: 600; cursor: pointer; background: linear-gradient(135deg, #7b2ff7, #6a5cf0, #9b4de0); }
+.adminWrap textarea, .supportWrap textarea { width: 100%; box-sizing: border-box; border: 1px solid #dfe3f5; border-radius: 10px; padding: 10px; font: inherit; resize: vertical; }
+.supportWrap { max-width: 720px; margin: 0 auto; padding: 16px; }
+.supportWrap .card { background: #fff; border-radius: 16px; padding: 16px; border: 1px solid #eceffa; box-shadow: 0 2px 10px rgba(0,0,0,.05); }
+.supportWrap form button[type="submit"] { margin-top: 10px; border: none; border-radius: 10px; padding: 11px 18px; color: #fff; font-weight: 600; cursor: pointer; background: linear-gradient(135deg, #7b2ff7, #6a5cf0, #9b4de0); }

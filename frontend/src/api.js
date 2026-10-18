@@ -30,3 +30,7 @@ export async function api(path, method = "GET", body) {
   }
   return data;
 }
+
+export const getRole = () => localStorage.getItem("role");
+export const setRole = (r) =>
+  r ? localStorage.setItem("role", r) : localStorage.removeItem("role");

@@ -1,6 +1,8 @@
 import { useEffect, useState, useRef } from "react";
 import { BrowserRouter, Routes, Route, Navigate, Link, useNavigate, useParams, useLocation } from "react-router-dom";
-import { api, getToken, setToken, getUsername, setUsername } from "./api";
+import { api, getToken, setToken, getUsername, setUsername, setRole } from "./api";
+import Admin from "./Admin";
+import Support from "./Support";
 
 const CATEGORIES = ["Phone", "Wallet", "Keys", "Bag", "Documents", "Other"];
 const ICONS = { Phone: "📱", Wallet: "👛", Keys: "🔑", Bag: "🎒", Documents: "🪪", Other: "📦" };
@@ -25,6 +27,7 @@ function Header() {
           <div className="hright">
             <span className="hi">Hi, {getUsername()}</span>
             <Link to="/my-posts" className="link navlink">My Posts</Link>
+            <Link to="/support" className="link navlink">Support</Link>
             <button className="link" onClick={() => { setToken(null); setUsername(null); nav("/"); }}>Logout</button>
           </div>
         </div>
@@ -68,9 +71,10 @@ function Auth() {
         const r = await api("/api/auth/login", "POST", { email: f.email, password: f.password });
         setToken(r.token);
         setUsername(r.username);
+        setRole(r.role || "USER");
         localStorage.setItem("lostlink_email", r.email);
         localStorage.setItem("lostlink_contact", r.contact);
-        nav("/feed");
+        nav(r.role === "ADMIN" ? "/admin" : "/feed");
       }
     } catch (e2) {
       setErr(e2.message);
@@ -502,6 +506,8 @@ export default function App() {
         <Route path="/new" element={<Protected><CreatePost /></Protected>} />
         <Route path="/my-posts" element={<Protected><MyPosts /></Protected>} />
         <Route path="/claim/:id" element={<Protected><Claim /></Protected>} />
+        <Route path="/support" element={<Protected><Support header={<Header />} /></Protected>} />
+        <Route path="/admin" element={<Protected><Admin /></Protected>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

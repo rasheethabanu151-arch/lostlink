@@ -14,4 +14,5 @@ public class User {
   @Column(nullable = false) private String passwordHash;
   private int failedLogins;
   private LocalDateTime lockedUntil;
+  @Column(columnDefinition = "varchar(20) default 'USER'") private String role = "USER";
 }
