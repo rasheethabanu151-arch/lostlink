@@ -101,3 +101,13 @@ body { background: linear-gradient(135deg, #eef1fb 0%, #e6ecfb 40%, #f3eefb 100%
 .dashAvatar { width: 64px; height: 64px; border-radius: 50%; margin: 0 auto 14px; background: linear-gradient(135deg, #7b2ff7, #6a5cf0, #9b4de0); color: #fff; font-size: 26px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
 .dashName { font-size: 20px; font-weight: 800; color: #1b2430; }
 .dashEmail { color: #667; font-size: 14px; margin-top: 4px; }
+
+
+/* ===== Header v2 (two rows, no top back button) ===== */
+.header { flex-direction: column; align-items: stretch; padding: 0; }
+.hrow1 { padding: 14px 24px 8px; text-align: center; }
+.hrow2 { display: flex; align-items: center; justify-content: space-between; padding: 10px 24px 14px; border-top: 1px solid #f0edfb; }
+.dashLabel { font-weight: 700; color: #7b2ff7; text-decoration: none; font-size: 15px; }
+.userChip { display: flex; align-items: center; gap: 8px; text-decoration: none; color: inherit; margin-right: 14px; }
+.avatarChip { width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(135deg, #7b2ff7, #6a5cf0, #9b4de0); color: #fff; font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+.dashContact { color: #667; font-size: 14px; margin-top: 2px; }
