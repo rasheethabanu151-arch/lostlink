@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { BrowserRouter, Routes, Route, Navigate, Link, useNavigate, useParams } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, Link, useNavigate, useParams, useLocation } from "react-router-dom";
 import { api, getToken, setToken, getUsername, setUsername } from "./api";
 
 const CATEGORIES = ["Phone", "Wallet", "Keys", "Bag", "Documents", "Other"];
@@ -11,11 +11,19 @@ function Protected({ children }) {
 
 function Header() {
   const nav = useNavigate();
+  const loc = useLocation();
+  const showBack = loc.pathname !== "/feed";
   return (
     <div className="header">
-      <Link to="/feed" className="logo">🔗 LostLink</Link>
+      <div className="hleft">
+        {showBack && (
+          <button className="backBtn" onClick={() => nav(-1)} aria-label="Go back">← Back</button>
+        )}
+        <Link to="/feed" className="logo">🔗 LostLink</Link>
+      </div>
       <div className="hright">
         <span className="hi">Hi, {getUsername()}</span>
+        <Link to="/dashboard" className="link navlink">Dashboard</Link>
         <Link to="/my-posts" className="link navlink">My Posts</Link>
         <button className="link" onClick={() => { setToken(null); setUsername(null); nav("/"); }}>Logout</button>
       </div>
@@ -29,7 +37,7 @@ function PasswordInput({ value, onChange, placeholder }) {
     <div className="pwwrap">
       <input type={show ? "text" : "password"} placeholder={placeholder} value={value} onChange={onChange} />
       <button type="button" className="eye" onClick={() => setShow(!show)} aria-label="Show or hide password">
-        {show ? "🙈" : "👁️"}
+        {show ? "👁️" : "🙈"}
       </button>
     </div>
   );
@@ -57,6 +65,7 @@ function Auth() {
         const r = await api("/api/auth/login", "POST", { email: f.email, password: f.password });
         setToken(r.token);
         setUsername(r.username);
+        localStorage.setItem("lostlink_email", f.email);
         nav("/feed");
       }
     } catch (e2) {
@@ -295,6 +304,15 @@ function Claim() {
 
   const fmt = (d) => d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
+  const back = () => {
+    if (step === 0) return;
+    setStep(step - 1);
+    setAnswers(answers.slice(0, -1));
+    setTimes(times.slice(0, -1));
+    setResult(null);
+    setErr("");
+  };
+
   const pick = async (opt) => {
     const q = qs[step];
     const next = [...answers, { questionId: q.id, answer: opt }];
@@ -363,6 +381,9 @@ function Claim() {
                     {q.options.map((o) => (
                       <button key={o} className="opt" onClick={() => pick(o)}>{o}</button>
                     ))}
+                    {step > 0 && (
+                      <button className="opt backOpt" onClick={back}>⬅ Back</button>
+                    )}
                   </div>
                 )}
               </div>
@@ -393,6 +414,23 @@ function Claim() {
   );
 }
 
+function Dashboard() {
+  const email = localStorage.getItem("lostlink_email") || "Not available";
+  return (
+    <>
+      <Header />
+      <div className="wrap dashWrap">
+        <h3>My Account</h3>
+        <div className="card dashCard">
+          <div className="dashAvatar">{getUsername() ? getUsername()[0].toUpperCase() : "U"}</div>
+          <div className="dashName">{getUsername()}</div>
+          <div className="dashEmail">{email}</div>
+        </div>
+      </div>
+    </>
+  );
+}
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -401,6 +439,7 @@ export default function App() {
         <Route path="/feed" element={<Protected><Feed /></Protected>} />
         <Route path="/new" element={<Protected><CreatePost /></Protected>} />
         <Route path="/my-posts" element={<Protected><MyPosts /></Protected>} />
+        <Route path="/dashboard" element={<Protected><Dashboard /></Protected>} />
         <Route path="/claim/:id" element={<Protected><Claim /></Protected>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
