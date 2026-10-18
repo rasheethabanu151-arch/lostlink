@@ -17,14 +17,16 @@ function Header() {
         <Link to="/feed" className="logo">🔗 LostLink</Link>
       </div>
       <div className="hrow2">
-        <Link to="/feed" className="dashLabel">Dashboard</Link>
-        <div className="hright">
-          <Link to="/account" className="userChip">
-            <span className="hi">Hi, {getUsername()}</span>
-            <span className="avatarChip">{getUsername() ? getUsername()[0].toUpperCase() : "U"}</span>
-          </Link>
-          <Link to="/my-posts" className="link navlink">My Posts</Link>
-          <button className="link" onClick={() => { setToken(null); setUsername(null); nav("/"); }}>Logout</button>
+        <div className="hrow2Inner">
+          <Link to="/feed" className="dashLabel">Dashboard</Link>
+          <div className="hright">
+            <Link to="/account" className="userChip">
+              <span className="hi">Hi, {getUsername()}</span>
+              <span className="avatarChip">{getUsername() ? getUsername()[0].toUpperCase() : "U"}</span>
+            </Link>
+            <Link to="/my-posts" className="link navlink">My Posts</Link>
+            <button className="link" onClick={() => { setToken(null); setUsername(null); nav("/"); }}>Logout</button>
+          </div>
         </div>
       </div>
     </div>
@@ -383,9 +385,6 @@ function Claim() {
                     {q.options.map((o) => (
                       <button key={o} className="opt" onClick={() => pick(o)}>{o}</button>
                     ))}
-                    {step > 0 && (
-                      <button className="opt backOpt" onClick={back}>⬅ Back</button>
-                    )}
                   </div>
                 )}
               </div>
@@ -411,6 +410,9 @@ function Claim() {
             <button className="fakeSend" disabled>Send</button>
           </div>
         </div>
+        {step > 0 && !result && (
+          <button className="belowChatBack" onClick={back}>⬅ Back to previous question</button>
+        )}
       </div>
     </>
   );

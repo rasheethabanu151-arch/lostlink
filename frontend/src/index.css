@@ -111,3 +111,12 @@ body { background: linear-gradient(135deg, #eef1fb 0%, #e6ecfb 40%, #f3eefb 100%
 .userChip { display: flex; align-items: center; gap: 8px; text-decoration: none; color: inherit; margin-right: 14px; }
 .avatarChip { width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(135deg, #7b2ff7, #6a5cf0, #9b4de0); color: #fff; font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
 .dashContact { color: #667; font-size: 14px; margin-top: 2px; }
+
+
+/* ===== Header v3: centered inner row ===== */
+.hrow2 { padding: 10px 0 14px; }
+.hrow2Inner { display: flex; align-items: center; justify-content: space-between; max-width: 960px; margin: 0 auto; padding: 0 24px; box-sizing: border-box; }
+
+/* ===== Back button below the chat frame ===== */
+.belowChatBack { display: block; margin: 14px auto 0; background: #f1eefc; color: #7b2ff7; border: 1px dashed #c9b6f5; border-radius: 10px; padding: 10px 18px; font-size: 14px; font-weight: 600; cursor: pointer; }
+.belowChatBack:hover { background: #e7defa; }
