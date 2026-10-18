@@ -20,10 +20,7 @@ function Header() {
         <div className="hrow2Inner">
           <Link to="/feed" className="dashLabel">Dashboard</Link>
           <div className="hright">
-            <Link to="/account" className="userChip">
-              <span className="hi">Hi, {getUsername()}</span>
-              <span className="avatarChip">{getUsername() ? getUsername()[0].toUpperCase() : "U"}</span>
-            </Link>
+            <span className="hi">Hi, {getUsername()}</span>
             <Link to="/my-posts" className="link navlink">My Posts</Link>
             <button className="link" onClick={() => { setToken(null); setUsername(null); nav("/"); }}>Logout</button>
           </div>
@@ -68,8 +65,8 @@ function Auth() {
         const r = await api("/api/auth/login", "POST", { email: f.email, password: f.password });
         setToken(r.token);
         setUsername(r.username);
-        localStorage.setItem("lostlink_email", f.email);
-        localStorage.setItem("lostlink_contact", localStorage.getItem("lostlink_contact_" + f.email) || "Not available");
+        localStorage.setItem("lostlink_email", r.email);
+        localStorage.setItem("lostlink_contact", r.contact);
         nav("/feed");
       }
     } catch (e2) {
@@ -419,25 +416,6 @@ function Claim() {
   );
 }
 
-function Account() {
-  const email = localStorage.getItem("lostlink_email") || "Not available";
-  const contact = localStorage.getItem("lostlink_contact") || "Not available";
-  return (
-    <>
-      <Header />
-      <div className="wrap dashWrap">
-        <h3>Account Details</h3>
-        <div className="card dashCard">
-          <div className="dashAvatar">{getUsername() ? getUsername()[0].toUpperCase() : "U"}</div>
-          <div className="dashName">{getUsername()}</div>
-          <div className="dashEmail">{email}</div>
-          <div className="dashContact">{contact}</div>
-        </div>
-      </div>
-    </>
-  );
-}
-
 export default function App() {
   return (
     <BrowserRouter>
@@ -446,7 +424,6 @@ export default function App() {
         <Route path="/feed" element={<Protected><Feed /></Protected>} />
         <Route path="/new" element={<Protected><CreatePost /></Protected>} />
         <Route path="/my-posts" element={<Protected><MyPosts /></Protected>} />
-        <Route path="/account" element={<Protected><Account /></Protected>} />
         <Route path="/claim/:id" element={<Protected><Claim /></Protected>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

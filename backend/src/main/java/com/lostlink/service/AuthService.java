@@ -45,6 +45,6 @@ public class AuthService {
     u.setFailedLogins(0);
     u.setLockedUntil(null);
     users.save(u);
-    return Map.of("token", jwt.generate(u.getUsername()), "username", u.getUsername());
+    return Map.of("token", jwt.generate(u.getUsername()), "username", u.getUsername(), "email", u.getEmail(), "contact", u.getContact());
   }
 }

@@ -125,3 +125,8 @@ body { background: linear-gradient(135deg, #eef1fb 0%, #e6ecfb 40%, #f3eefb 100%
 /* ===== Header spacing fix ===== */
 .hrow2Inner { width: 100%; gap: 20px; }
 .dashLabel { margin-right: auto; }
+
+
+/* ===== Account details rows ===== */
+.dashRow { display: flex; justify-content: space-between; padding: 10px 2px; border-top: 1px solid #f0edfb; margin-top: 8px; font-size: 14px; color: #1b2430; }
+.dashLabelTxt { color: #887; font-weight: 600; }
