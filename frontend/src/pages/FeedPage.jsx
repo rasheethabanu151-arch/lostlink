@@ -296,7 +296,7 @@ export default function FeedPage() {
 
                       {/* Right Action Area */}
                       <div className="post-actions-col">
-                        {!isLost && (
+                        {!isLost && !p.mine && (
                           <Link
                             to={`/claim/${p.id}`}
                             className="btn btn-primary btn-sm claim-cta-btn"
