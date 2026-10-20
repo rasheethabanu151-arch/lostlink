@@ -1,513 +1,89 @@
-import { useEffect, useState, useRef } from "react";
-import { BrowserRouter, Routes, Route, Navigate, Link, useNavigate, useParams, useLocation } from "react-router-dom";
-import { api, getToken, setToken, getUsername, setUsername, setRole } from "./api";
-import Admin from "./Admin";
+import React from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { getToken } from "./api";
+import AuthPage from "./pages/AuthPage";
+import FeedPage from "./pages/FeedPage";
+import SuggestionsPage from "./pages/SuggestionsPage";
+import CreatePostPage from "./pages/CreatePostPage";
+import EditPostPage from "./pages/EditPostPage";
+import MyPostsPage from "./pages/MyPostsPage";
+import ClaimPage from "./pages/ClaimPage";
 import Support from "./Support";
-
-const CATEGORIES = ["Phone", "Wallet", "Keys", "Bag", "Documents", "Other"];
-const ICONS = { Phone: "📱", Wallet: "👛", Keys: "🔑", Bag: "🎒", Documents: "🪪", Other: "📦" };
+import Admin from "./Admin";
 
 function Protected({ children }) {
   return getToken() ? children : <Navigate to="/" replace />;
-}
-
-function Header() {
-  const nav = useNavigate();
-  return (
-    <div className="header">
-      <div className="hrow1">
-        <Link to="/feed" className="logo">🔗 LostLink</Link>
-      </div>
-      <div className="hrow2">
-        <div className="hrow2Inner">
-          <div className="navTabs">
-            <Link to="/feed" className="dashLabel">Dashboard</Link>
-            <Link to="/suggestions" className="dashLabel">Suggestions</Link>
-          </div>
-          <div className="hright">
-            <span className="hi">Hi, {getUsername()}</span>
-            <Link to="/my-posts" className="link navlink">My Posts</Link>
-            <Link to="/support" className="link navlink">Support</Link>
-            <button className="link" onClick={() => { setToken(null); setUsername(null); nav("/"); }}>Logout</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function PasswordInput({ value, onChange, placeholder }) {
-  const [show, setShow] = useState(false);
-  return (
-    <div className="pwwrap">
-      <input type={show ? "text" : "password"} placeholder={placeholder} value={value} onChange={onChange} />
-      <button type="button" className="eye" onClick={() => setShow(!show)} aria-label="Show or hide password">
-        {show ? "👁️" : "🙈"}
-      </button>
-    </div>
-  );
-}
-
-function Auth() {
-  const nav = useNavigate();
-  const [mode, setMode] = useState("login");
-  const [f, setF] = useState({ username: "", email: "", contact: "", location: "", password: "" });
-  const [msg, setMsg] = useState("");
-  const [err, setErr] = useState("");
-  if (getToken()) return <Navigate to="/feed" replace />;
-  const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
-
-  const submit = async (e) => {
-    e.preventDefault();
-    setErr("");
-    setMsg("");
-    try {
-      if (mode === "register") {
-        await api("/api/auth/register", "POST", f);
-        localStorage.setItem("lostlink_contact_" + f.email, f.contact);
-        setMode("login");
-        setMsg("Registered! Please login with your email.");
-      } else {
-        const r = await api("/api/auth/login", "POST", { email: f.email, password: f.password });
-        setToken(r.token);
-        setUsername(r.username);
-        setRole(r.role || "USER");
-        localStorage.setItem("lostlink_email", r.email);
-        localStorage.setItem("lostlink_contact", r.contact);
-        nav(r.role === "ADMIN" ? "/admin" : "/feed");
-      }
-    } catch (e2) {
-      setErr(e2.message);
-    }
-  };
-
-  return (
-    <div className="wrap authWrap">
-      <div className="logoBadge">🔗</div>
-      <h2>LostLink</h2>
-      <p className="subtitle">Lost &amp; Found Management System</p>
-      <p className="tagline">
-        Report a lost or found item in seconds. LostLink suggests matches by category and
-        location, and contact details are shared only after the finder's verification
-        questions are answered correctly.
-      </p>
-      <div className="steps">
-        <div className="step"><span>📝</span><b>Post</b><small>Report lost or found</small></div>
-        <div className="step"><span>🔍</span><b>Match</b><small>Smart suggestions</small></div>
-        <div className="step"><span>🔐</span><b>Verify</b><small>Answer to claim</small></div>
-      </div>
-      <form className="card" onSubmit={submit}>
-        <h3>{mode === "login" ? "Login" : "Register"}</h3>
-        {mode === "register" && (
-          <input placeholder="Username" value={f.username} onChange={set("username")} />
-        )}
-        <input type="email" placeholder="Email" value={f.email} onChange={set("email")} />
-        {mode === "register" && (
-          <>
-            <input placeholder="Contact (10 digits)" value={f.contact} onChange={set("contact")} />
-            <input placeholder="Location (city)" value={f.location} onChange={set("location")} />
-          </>
-        )}
-        <PasswordInput placeholder="Password (min 6)" value={f.password} onChange={set("password")} />
-        {err && <div className="err">{err}</div>}
-        {msg && <div className="ok">{msg}</div>}
-        <button type="submit">{mode === "login" ? "Login" : "Register"}</button>
-        <button type="button" className="link" onClick={() => { setMode(mode === "login" ? "register" : "login"); setErr(""); setMsg(""); }}>
-          {mode === "login" ? "New here? Register" : "Already have an account? Login"}
-        </button>
-      </form>
-    </div>
-  );
-}
-
-function Feed() {
-  const [posts, setPosts] = useState(null);
-  const nav = useNavigate();
-  const load = () => api("/api/posts").then(setPosts).catch(() => setPosts([]));
-  useEffect(() => { load(); }, []);
-
-  const del = async (id) => {
-    if (!window.confirm("Delete this post?")) return;
-    try {
-      await api("/api/posts/" + id, "DELETE");
-      load();
-    } catch (e) {
-      alert(e.message);
-    }
-  };
-
-  return (
-    <>
-      <Header />
-      <div className="wrap feedWrap">
-        <h3>Latest items</h3>
-        {posts === null && <p>Loading...</p>}
-        {posts && posts.length === 0 && <p><small>No items yet. Tap + to post one.</small></p>}
-        {posts && posts.map((p) => (
-          <div key={p.id} className="card post">
-            {p.type === "LOST" ? (
-              <div className="postlink">
-                <div className="icon">{ICONS[p.category] || "📦"}</div>
-                <div>
-                  <span className="badge lost">Lost</span>
-                  <b> {p.title}</b>
-                  <div><small>{p.category} · {p.location}{p.mine ? " · Your post" : ""}</small></div>
-                  <div><small>{new Date(p.createdAt).toLocaleString()}</small></div>
-                </div>
-              </div>
-            ) : (
-              <Link to={"/claim/" + p.id} className="postlink">
-                <div className="icon">{ICONS[p.category] || "📦"}</div>
-                <div>
-                  <span className="badge found">Found</span>
-                  <b> {p.title}</b>
-                  <div><small>{p.category} · {p.location}{p.mine ? " · Your post" : ""}</small></div>
-                  <div><small>{new Date(p.createdAt).toLocaleString()}</small></div>
-                </div>
-              </Link>
-            )}
-            {p.mine && <button className="del" onClick={() => del(p.id)}>🗑️ Delete</button>}
-          </div>
-        ))}
-        <button className="fab" onClick={() => nav("/new")}>+ New post</button>
-      </div>
-    </>
-  );
-}
-
-function MyPosts() {
-  const [posts, setPosts] = useState(null);
-  const nav = useNavigate();
-  const load = () => api("/api/posts/mine").then(setPosts).catch(() => setPosts([]));
-  useEffect(() => { load(); }, []);
-
-  const del = async (id) => {
-    if (!window.confirm("Delete this post?")) return;
-    try {
-      await api("/api/posts/" + id, "DELETE");
-      load();
-    } catch (e) {
-      alert(e.message);
-    }
-  };
-
-  return (
-    <>
-      <Header />
-      <div className="wrap">
-        <h3>My posts</h3>
-        {posts === null && <p>Loading...</p>}
-        {posts && posts.length === 0 && (
-          <div className="empty">
-            <div className="emptyIcon">📭</div>
-            <p>You haven't posted anything yet.</p>
-            <button onClick={() => nav("/new")}>+ Create your first post</button>
-            <button className="link" onClick={() => nav("/feed")}>← Back to feed</button>
-          </div>
-        )}
-        {posts && posts.map((p) => (
-          <div key={p.id} className="card post">
-            <div className="postlink">
-              <div className="icon">{ICONS[p.category] || "📦"}</div>
-              <div>
-                <span className={p.type === "LOST" ? "badge lost" : "badge found"}>{p.type === "LOST" ? "Lost" : "Found"}</span>
-                <b> {p.title}</b>
-                <div><small>{p.category} · {p.location}</small></div>
-                <div><small>{new Date(p.createdAt).toLocaleString()}</small></div>
-                <div>
-                  <span className={p.status === "CLAIMED" ? "badge claimed" : "badge open"}>
-                    {p.status === "CLAIMED" ? "✅ Claimed" : "Open"}
-                  </span>
-                  {p.status === "CLAIMED" && p.claimedBy && (
-                    <small> · verified by {p.claimedBy}</small>
-                  )}
-                </div>
-              </div>
-            </div>
-            <button className="del" onClick={() => del(p.id)}>🗑️ Delete</button>
-          </div>
-        ))}
-      </div>
-    </>
-  );
-}
-
-function Suggestions() {
-  const [groups, setGroups] = useState(null);
-  useEffect(() => { api("/api/posts/suggestions").then(setGroups).catch(() => setGroups([])); }, []);
-  return (
-    <>
-      <Header />
-      <div className="wrap feedWrap">
-        <h3>Suggestions</h3>
-        {groups === null && <p>Loading...</p>}
-        {groups && groups.length === 0 && <p><small>No suggestions yet. Check back once more items are posted.</small></p>}
-        {groups && groups.map((g) => (
-          <div key={g.myPost.id} className="card suggestGroup">
-            <div className="suggestMine">
-              <span className={g.myPost.type === "LOST" ? "badge lost" : "badge found"}>
-                {g.myPost.type === "LOST" ? "Your Lost post" : "Your Found post"}
-              </span>
-              <b> {g.myPost.title}</b>
-            </div>
-            {g.matches.map((m) => (
-              m.type === "FOUND" ? (
-                <Link key={m.id} to={"/claim/" + m.id} className="suggestMatch">
-                  <div className="icon">{ICONS[m.category] || "📦"}</div>
-                  <div>
-                    <b>{m.title}</b>
-                    <div><small>{m.category} · {m.location}</small></div>
-                  </div>
-                  <span className="suggestCta">Verify &amp; claim →</span>
-                </Link>
-              ) : (
-                <div key={m.id} className="suggestMatch info">
-                  <div className="icon">{ICONS[m.category] || "📦"}</div>
-                  <div>
-                    <b>{m.title}</b>
-                    <div><small>{m.category} · {m.location} · someone may be looking for this</small></div>
-                  </div>
-                </div>
-              )
-            ))}
-          </div>
-        ))}
-      </div>
-    </>
-  );
-}
-
-const blankQ = (type) => ({ type, text: "", count: 4, options: ["", "", "", "", ""], correctIdx: -1 });
-
-function CreatePost() {
-  const nav = useNavigate();
-  const [p, setP] = useState({ type: "FOUND", title: "", category: "Phone", location: "", description: "" });
-  const [qs, setQs] = useState([blankQ("BASIC"), blankQ("UNIQUE")]);
-  const [err, setErr] = useState("");
-  const upd = (i, patch) => setQs(qs.map((q, j) => (j === i ? { ...q, ...patch } : q)));
-  const setOpt = (i, k, v) => {
-    const options = [...qs[i].options];
-    options[k] = v;
-    upd(i, { options });
-  };
-
-  const submit = async () => {
-    setErr("");
-    if (qs.some((q) => q.correctIdx < 0)) { setErr("Select the correct answer (the circle next to an option) for every question"); return; }
-    const questions = qs.map((q) => {
-      const options = q.options.slice(0, q.count).map((o) => o.trim());
-      return { type: q.type, text: q.text.trim(), options, correctAnswer: options[q.correctIdx] || "" };
-    });
-    try {
-      await api("/api/posts", "POST", { ...p, questions });
-      nav("/feed");
-    } catch (e) {
-      setErr(e.message);
-    }
-  };
-
-  return (
-    <>
-      <Header />
-      <div className="wrap">
-        <h3>{p.type === "LOST" ? "Post a lost item" : "Post a found item"}</h3>
-        <div className="typeToggle">
-          <button type="button" className={p.type === "FOUND" ? "typeBtn active" : "typeBtn"} onClick={() => setP({ ...p, type: "FOUND" })}>I found something</button>
-          <button type="button" className={p.type === "LOST" ? "typeBtn active" : "typeBtn"} onClick={() => setP({ ...p, type: "LOST" })}>I lost something</button>
-        </div>
-        <div className="card">
-          <input placeholder={p.type === "LOST" ? "Title (e.g. Lost my water bottle)" : "Title (e.g. Phone found near bus stand)"} value={p.title} onChange={(e) => setP({ ...p, title: e.target.value })} />
-          <select value={p.category} onChange={(e) => setP({ ...p, category: e.target.value })}>
-            {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
-          </select>
-          <input placeholder={p.type === "LOST" ? "Where did you lose it?" : "Where did you find it?"} value={p.location} onChange={(e) => setP({ ...p, location: e.target.value })} />
-          <textarea placeholder="Short description (do not include private details)" value={p.description} onChange={(e) => setP({ ...p, description: e.target.value })} />
-        </div>
-
-        <h3>Verification questions</h3>
-        <small>The owner must answer these. Pick the correct option with the radio button.</small>
-        {qs.map((q, i) => (
-          <div className="card" key={i}>
-            {qs.length > 2 && (
-              <button type="button" className="removeQ" onClick={() => setQs(qs.filter((_, j) => j !== i))}>
-                ✕ Remove this question
-              </button>
-            )}
-            <select value={q.type} onChange={(e) => upd(i, { type: e.target.value })}>
-              <option value="BASIC">Basic question</option>
-              <option value="UNIQUE">Unique (secret) question</option>
-            </select>
-            <input placeholder="Enter your question" value={q.text} onChange={(e) => upd(i, { text: e.target.value })} />
-            <label>
-              <small>Number of options</small>
-              <select value={q.count} onChange={(e) => upd(i, { count: Number(e.target.value), correctIdx: -1 })}>
-                {[2, 3, 4, 5].map((n) => <option key={n} value={n}>{n}</option>)}
-              </select>
-            </label>
-            {q.options.slice(0, q.count).map((o, k) => (
-              <div className="optrow" key={k}>
-                <input type="radio" name={"c" + i} checked={q.correctIdx === k} onChange={() => upd(i, { correctIdx: k })} />
-                <input placeholder={"Option " + (k + 1)} value={o} onChange={(e) => setOpt(i, k, e.target.value)} />
-              </div>
-            ))}
-          </div>
-        ))}
-        <button className="link" onClick={() => setQs([...qs, blankQ("BASIC")])}>+ Add basic question</button>
-        <button className="link" onClick={() => setQs([...qs, blankQ("UNIQUE")])}>+ Add unique question</button>
-        {err && <div className="err">{err}</div>}
-        <br />
-        <button onClick={submit}>Set questions and publish</button>
-      </div>
-    </>
-  );
-}
-
-function Claim() {
-  const nav = useNavigate();
-  const { id } = useParams();
-  const [qs, setQs] = useState([]);
-  const [step, setStep] = useState(0);
-  const [answers, setAnswers] = useState([]);
-  const [times, setTimes] = useState([]);
-  const [result, setResult] = useState(null);
-  const [err, setErr] = useState("");
-  const [hue, setHue] = useState(280);
-  const startTime = useRef(new Date());
-  const bodyRef = useRef(null);
-
-  useEffect(() => {
-    api("/api/posts/" + id + "/questions").then(setQs).catch((e) => setErr(e.message));
-  }, [id]);
-
-  const onScroll = (e) => {
-    const h = 280 + (e.target.scrollTop % 360);
-    setHue(h);
-  };
-
-  const fmt = (d) => d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-
-  const back = () => {
-    if (step === 0) return;
-    setStep(step - 1);
-    setAnswers(answers.slice(0, -1));
-    setTimes(times.slice(0, -1));
-    setResult(null);
-    setErr("");
-  };
-
-  const pick = async (opt) => {
-    const q = qs[step];
-    const next = [...answers, { questionId: q.id, answer: opt }];
-    setAnswers(next);
-    setTimes([...times, new Date()]);
-    if (step + 1 < qs.length) {
-      setStep(step + 1);
-    } else {
-      try {
-        setResult(await api("/api/posts/" + id + "/claim", "POST", { answers: next }));
-      } catch (e) {
-        setErr(e.message);
-      }
-    }
-  };
-
-  const bodyStyle = {
-    background: `linear-gradient(160deg, hsl(${hue},85%,92%), hsl(${(hue + 60) % 360},85%,94%), hsl(${(hue + 120) % 360},85%,92%))`,
-  };
-
-  return (
-    <>
-      <Header />
-      <div className="wrap">
-        <div className="chatFrame">
-          <div className="chatHeader">
-            <div className="chatAvatar">✨</div>
-            <div className="chatHeaderText">
-              <div className="chatName">LostLink <span className="chatSub">AI Verification</span></div>
-              <div className="chatStatus"><span className="dot" /> Online now</div>
-            </div>
-          </div>
-          <div className="chatBody" style={bodyStyle} onScroll={onScroll} ref={bodyRef}>
-            <div className="msgRow fromBot">
-              <div className="botAvatar">🤖</div>
-              <div className="bubbleCol">
-                <div className="bubble fromBot">Hi! Answer a few questions to prove this item is yours.</div>
-                <div className="msgTime">{fmt(startTime.current)}</div>
-              </div>
-            </div>
-            {qs.map((q, i) => i <= step && (
-              <div key={q.id}>
-                {q.type === "UNIQUE" && (i === 0 || qs[i - 1].type === "BASIC") && (
-                  <div className="msgRow fromBot">
-                    <div className="botAvatar">🤖</div>
-                    <div className="bubbleCol">
-                      <div className="bubble fromBot">Now a few more detailed questions.</div>
-                    </div>
-                  </div>
-                )}
-                <div className="msgRow fromBot">
-                  <div className="botAvatar">🤖</div>
-                  <div className="bubbleCol">
-                    <div className="bubble fromBot">{q.text}</div>
-                  </div>
-                </div>
-                {answers[i] ? (
-                  <div className="msgRow fromMe">
-                    <div className="bubbleCol alignRight">
-                      <div className="bubble fromMe">{answers[i].answer}</div>
-                      <div className="msgTime">{times[i] ? fmt(times[i]) : ""}</div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="opts">
-                    {q.options.map((o) => (
-                      <button key={o} className="opt" onClick={() => pick(o)}>{o}</button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
-            {err && <div className="err">{err}</div>}
-            {result && result.verified && (
-              <div className="result">
-                <h3>✅ Verified</h3>
-                <p>Contact {result.finder}:</p>
-                <h2><a href={"tel:" + result.contact}>{result.contact}</a></h2>
-              </div>
-            )}
-            {result && !result.verified && (
-              <div className="result">
-                <h3>⚠️ {result.message}</h3>
-                <p><small>You have limited attempts for each item.</small></p>
-                <Link to="/feed">Back to items</Link>
-              </div>
-            )}
-          </div>
-          <div className="chatInputBar">
-            <input className="fakeInput" placeholder="Choose an option above" disabled />
-            <button className="fakeSend" disabled>Send</button>
-          </div>
-        </div>
-        {!result && (
-          <button className="belowChatBack" onClick={() => nav("/feed")}>⬅ Back to Dashboard</button>
-        )}
-      </div>
-    </>
-  );
 }
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Auth />} />
-        <Route path="/feed" element={<Protected><Feed /></Protected>} />
-        <Route path="/suggestions" element={<Protected><Suggestions /></Protected>} />
-        <Route path="/new" element={<Protected><CreatePost /></Protected>} />
-        <Route path="/my-posts" element={<Protected><MyPosts /></Protected>} />
-        <Route path="/claim/:id" element={<Protected><Claim /></Protected>} />
-        <Route path="/support" element={<Protected><Support header={<Header />} /></Protected>} />
-        <Route path="/admin" element={<Protected><Admin /></Protected>} />
+        <Route path="/" element={<AuthPage />} />
+        <Route
+          path="/feed"
+          element={
+            <Protected>
+              <FeedPage />
+            </Protected>
+          }
+        />
+        <Route
+          path="/suggestions"
+          element={
+            <Protected>
+              <SuggestionsPage />
+            </Protected>
+          }
+        />
+        <Route
+          path="/new"
+          element={
+            <Protected>
+              <CreatePostPage />
+            </Protected>
+          }
+        />
+        <Route
+          path="/edit/:id"
+          element={
+            <Protected>
+              <EditPostPage />
+            </Protected>
+          }
+        />
+        <Route
+          path="/my-posts"
+          element={
+            <Protected>
+              <MyPostsPage />
+            </Protected>
+          }
+        />
+        <Route
+          path="/claim/:id"
+          element={
+            <Protected>
+              <ClaimPage />
+            </Protected>
+          }
+        />
+        <Route
+          path="/support"
+          element={
+            <Protected>
+              <Support />
+            </Protected>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <Protected>
+              <Admin />
+            </Protected>
+          }
+        />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

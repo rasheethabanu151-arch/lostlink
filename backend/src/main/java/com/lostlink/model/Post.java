@@ -14,7 +14,7 @@ public class Post {
   private String location;
   @Column(length = 500) private String description;
   private String status = "OPEN";
-  @Column(nullable = false, columnDefinition = "varchar(20) default 'FOUND'")
+  @Column(nullable = false, length = 20)
   private String type = "FOUND";
   private LocalDateTime createdAt = LocalDateTime.now();
 }

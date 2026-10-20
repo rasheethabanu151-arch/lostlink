@@ -26,6 +26,11 @@ public class PostController {
   @GetMapping("/suggestions")
   public List<SuggestionGroup> suggestions(Authentication auth) { return svc.suggestionsFor(auth.getName()); }
 
+  @PutMapping("/{id}")
+  public PostSummary update(Authentication auth, @PathVariable Long id, @Valid @RequestBody UpdatePostRequest r) {
+    return svc.update(auth.getName(), id, r);
+  }
+
   @DeleteMapping("/{id}")
   public Map<String, String> delete(Authentication auth, @PathVariable Long id) {
     svc.delete(auth.getName(), id);

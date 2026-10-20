@@ -17,6 +17,12 @@ public class PostDtos {
     @NotBlank String location,
     String description,
     @NotNull @Size(min = 2) List<@Valid QuestionInput> questions) {}
+  public record UpdatePostRequest(
+    @NotBlank String type,
+    @NotBlank String title,
+    @NotBlank String category,
+    @NotBlank String location,
+    String description) {}
   public record PostSummary(Long id, String title, String category, String location,
                             String description, LocalDateTime createdAt, boolean mine,
                             String status, String claimedBy, String type) {}

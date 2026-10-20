@@ -26,7 +26,10 @@ export async function api(path, method = "GET", body) {
       setUsername(null);
       window.location.href = "/";
     }
-    throw new Error(data?.errors?.[0]?.defaultMessage || data?.message || "Something went wrong");
+    const fallbackMsg = res.status >= 500
+      ? "Backend server is unreachable (HTTP 500). Please ensure your Spring Boot backend is running on port 8080."
+      : "Something went wrong";
+    throw new Error(data?.errors?.[0]?.defaultMessage || data?.message || fallbackMsg);
   }
   return data;
 }

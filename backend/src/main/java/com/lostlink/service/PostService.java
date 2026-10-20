@@ -19,7 +19,7 @@ public class PostService {
   private final ClaimAttemptRepository attempts;
   private final PasswordEncoder encoder;
 
-  private static String norm(String s) { return s == null ? "" : s.trim().toLowerCase(); }
+  private static String norm(String s) { return s == null ? "" : s.trim().toLowerCase(Locale.ROOT); }
 
   private User user(String username) {
     return users.findByUsername(username)
@@ -80,13 +80,21 @@ public class PostService {
   }
 
   private boolean locationMatches(String a, String b) {
-    String na = norm(a), nb = norm(b);
-    if (na.isBlank() || nb.isBlank()) return false;
-    if (na.contains(nb) || nb.contains(na)) return true;
-    for (String w : na.split("\\s+")) {
-      if (w.length() > 2 && nb.contains(w)) return true;
+    Set<String> left = locationTokens(a);
+    Set<String> right = locationTokens(b);
+    if (left.isEmpty() || right.isEmpty()) return false;
+    Set<String> smaller = left.size() <= right.size() ? left : right;
+    Set<String> larger = left.size() <= right.size() ? right : left;
+    return larger.containsAll(smaller);
+  }
+
+  private Set<String> locationTokens(String location) {
+    if (location == null) return Set.of();
+    Set<String> tokens = new HashSet<>();
+    for (String token : location.toLowerCase(Locale.ROOT).split("[^\\p{L}\\p{N}]+")) {
+      if (!token.isBlank()) tokens.add(token);
     }
-    return false;
+    return tokens;
   }
 
   public List<SuggestionGroup> suggestionsFor(String username) {
@@ -107,6 +115,26 @@ public class PostService {
       if (!matches.isEmpty()) out.add(new SuggestionGroup(toSummary(m, username), matches));
     }
     return out;
+  }
+
+  @Transactional
+  public PostSummary update(String username, Long postId, UpdatePostRequest request) {
+    User owner = user(username);
+    Post post = posts.findById(postId)
+      .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found"));
+    if (!post.getOwner().getId().equals(owner.getId()))
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only edit your own posts");
+    if (!"OPEN".equals(post.getStatus()))
+      throw new ResponseStatusException(HttpStatus.CONFLICT, "Claimed posts cannot be edited");
+    String postType = request.type().toUpperCase(Locale.ROOT);
+    if (!postType.equals("LOST") && !postType.equals("FOUND"))
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Type must be LOST or FOUND");
+    post.setType(postType);
+    post.setTitle(request.title().trim());
+    post.setCategory(request.category().trim());
+    post.setLocation(request.location().trim());
+    post.setDescription(request.description() == null ? "" : request.description().trim());
+    return toSummary(posts.save(post), username);
   }
 
   @Transactional
@@ -138,6 +166,10 @@ public class PostService {
     User user = user(username);
     Post post = posts.findById(postId)
       .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found"));
+    if (!"OPEN".equals(post.getStatus()))
+      throw new ResponseStatusException(HttpStatus.CONFLICT, "This item has already been claimed");
+    if (!"FOUND".equals(post.getType()))
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only found item reports can be claimed");
     if (post.getOwner().getId().equals(user.getId()))
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You cannot claim your own post");
     ClaimAttempt a = attempts.findByUserIdAndPostId(user.getId(), postId).orElseGet(() -> {
@@ -169,6 +201,9 @@ public class PostService {
       result.put("verified", true);
       result.put("finder", post.getOwner().getUsername());
       result.put("contact", post.getOwner().getContact());
+      result.put("item", post.getTitle());
+      result.put("location", post.getLocation());
+      result.put("type", post.getType() == null ? "FOUND" : post.getType());
       return result;
     }
     a.setFailures(a.getFailures() + 1);

@@ -1,0 +1,72 @@
+:root {
+  /* Brand palette */
+  --color-primary: #4f46e5;
+  --color-primary-hover: #4338ca;
+  --color-primary-light: #eef2ff;
+  --color-primary-glow: rgba(79, 70, 229, 0.25);
+
+  --color-amber: #f59e0b;
+  --color-amber-glow: rgba(245, 158, 11, 0.35);
+  --color-amber-light: #fef3c7;
+
+  /* Status Colors */
+  --color-lost: #e11d48;
+  --color-lost-bg: #ffe4e6;
+  --color-lost-border: #fecdd3;
+
+  --color-found: #059669;
+  --color-found-bg: #d1fae5;
+  --color-found-border: #a7f3d0;
+
+  --color-claimed: #7c3aed;
+  --color-claimed-bg: #ede9fe;
+  --color-claimed-border: #ddd6fe;
+
+  --color-danger: #dc2626;
+  --color-danger-bg: #fee2e2;
+
+  /* App Workspace Neutrals */
+  --bg-app: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-surface-subtle: #f1f5f9;
+  --border-subtle: #e2e8f0;
+  --border-strong: #cbd5e1;
+
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --text-subtle: #94a3b8;
+
+  /* Dark Night/Room Palette (Welcome & Cinematic Moments) */
+  --bg-dark-room: #090d16;
+  --bg-dark-card: rgba(18, 24, 38, 0.82);
+  --border-dark: rgba(255, 255, 255, 0.1);
+  --text-dark-main: #f8fafc;
+  --text-dark-muted: #94a3b8;
+
+  /* Typography */
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Elevation */
+  --shadow-xs: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
+  --shadow-sm: 0 1px 3px 0 rgba(15, 23, 42, 0.08), 0 1px 2px -1px rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.04);
+  --shadow-xl: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.05);
+  --shadow-lamp: 0 0 60px 15px rgba(245, 158, 11, 0.35);
+
+  /* Radiuses */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 22px;
+  --radius-full: 9999px;
+
+  /* Motion */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-relaxed: 400ms;
+}
