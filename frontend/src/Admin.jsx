@@ -153,7 +153,7 @@ export default function Admin() {
       <header className="admin-header">
         <div className="admin-header-container">
           <div className="admin-brand">
-            <span className="brand-icon">🔗</span>
+            <img className="brand-mark" src="/penguin-logo.png" alt="" />
             <span className="brand-text">LostLink Admin Console</span>
             <span className="admin-role-badge">Superuser</span>
           </div>

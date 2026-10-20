@@ -40,7 +40,7 @@ export default function Header() {
         <div className="header-container">
           {/* Brand Logo & Companion */}
           <Link to="/feed" className="brand-logo" aria-label="LostLink Home">
-            <span className="brand-icon">🔗</span>
+            <img className="brand-mark" src="/penguin-logo.png" alt="" />
             <span className="brand-text">LostLink</span>
           </Link>
 

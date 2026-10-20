@@ -1143,6 +1143,13 @@ textarea:focus {
   letter-spacing: -0.5px;
 }
 
+.brand-mark {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  object-fit: contain;
+}
+
 .desktop-nav {
   display: flex;
   align-items: center;
