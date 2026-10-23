@@ -3,12 +3,14 @@ import com.lostlink.dto.AuthDtos;
 import com.lostlink.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RestController @RequestMapping("/api") @RequiredArgsConstructor
 public class AuthController {
   private final AuthService auth;
+  private final JdbcTemplate jdbcTemplate;
 
   @PostMapping("/auth/register")
   public Map<String, String> register(@Valid @RequestBody AuthDtos.RegisterRequest r) {
@@ -23,4 +25,10 @@ public class AuthController {
 
   @GetMapping("/health")
   public Map<String, String> health() { return Map.of("status", "ok"); }
+
+  @GetMapping("/health/db")
+  public Map<String, String> databaseHealth() {
+    jdbcTemplate.queryForObject("SELECT 1", Integer.class);
+    return Map.of("status", "ok");
+  }
 }

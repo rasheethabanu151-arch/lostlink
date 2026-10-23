@@ -15,6 +15,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.List;
+import java.util.Arrays;
 
 @Configuration @RequiredArgsConstructor
 public class SecurityConfig {
@@ -27,7 +28,7 @@ public class SecurityConfig {
       .cors(Customizer.withDefaults())
       .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
       .authorizeHttpRequests(a -> a
-        .requestMatchers("/api/auth/**", "/api/health").permitAll()
+        .requestMatchers("/api/auth/**", "/api/health", "/api/health/db").permitAll()
         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
         .requestMatchers("/api/admin/**").hasRole("ADMIN")
         .anyRequest().authenticated())
@@ -40,7 +41,10 @@ public class SecurityConfig {
   @Bean
   CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration c = new CorsConfiguration();
-    c.setAllowedOrigins(List.of(allowedOrigin));
+    c.setAllowedOrigins(Arrays.stream(allowedOrigin.split(","))
+      .map(String::trim)
+      .filter(origin -> !origin.isEmpty())
+      .toList());
     c.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
     c.setAllowedHeaders(List.of("*"));
     UrlBasedCorsConfigurationSource s = new UrlBasedCorsConfigurationSource();

@@ -13,6 +13,26 @@
   width: 100%;
 }
 
+.server-waking {
+  position: fixed;
+  z-index: 1000;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: calc(100% - 24px);
+  padding: 10px 16px;
+  border: 1px solid #f3c969;
+  border-radius: 6px;
+  background: #fff8e5;
+  color: #624b12;
+  font-size: 14px;
+  line-height: 1.4;
+  text-align: center;
+  box-shadow: 0 3px 12px rgba(35, 27, 9, 0.12);
+  pointer-events: none;
+}
+
 html, body {
   min-height: 100%;
   font-family: var(--font-sans);
