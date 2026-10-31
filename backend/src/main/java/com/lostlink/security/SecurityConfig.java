@@ -3,6 +3,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -23,13 +24,23 @@ public class SecurityConfig {
   @Value("${cors.allowed-origin}") private String allowedOrigin;
 
   @Bean
+  @Order(1)
+  SecurityFilterChain publicEndpoints(HttpSecurity http) throws Exception {
+    http.securityMatcher("/api/auth/**", "/api/health", "/api/health/db")
+      .csrf(c -> c.disable())
+      .cors(Customizer.withDefaults())
+      .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+      .authorizeHttpRequests(a -> a.anyRequest().permitAll());
+    return http.build();
+  }
+
+  @Bean
+  @Order(2)
   SecurityFilterChain chain(HttpSecurity http) throws Exception {
     http.csrf(c -> c.disable())
       .cors(Customizer.withDefaults())
       .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
       .authorizeHttpRequests(a -> a
-        .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/register").permitAll()
-        .requestMatchers("/api/auth/**", "/api/health", "/api/health/db").permitAll()
         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
         .requestMatchers("/api/admin/**").hasRole("ADMIN")
         .anyRequest().authenticated())
