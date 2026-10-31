@@ -8,6 +8,7 @@ import CreatePostPage from "./pages/CreatePostPage";
 import EditPostPage from "./pages/EditPostPage";
 import MyPostsPage from "./pages/MyPostsPage";
 import ClaimPage from "./pages/ClaimPage";
+import ClaimDetailsPage from "./pages/ClaimDetailsPage";
 import Support from "./Support";
 import Admin from "./Admin";
 
@@ -80,6 +81,14 @@ export default function App() {
           element={
             <Protected>
               <ClaimPage />
+            </Protected>
+          }
+        />
+        <Route
+          path="/claims/:id"
+          element={
+            <Protected>
+              <ClaimDetailsPage />
             </Protected>
           }
         />

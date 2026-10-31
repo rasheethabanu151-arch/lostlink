@@ -1,5 +1,6 @@
 package com.lostlink.service;
 import com.lostlink.dto.PostDtos.*;
+import com.lostlink.dto.ClaimDtos.ClaimView;
 import com.lostlink.model.*;
 import com.lostlink.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,7 @@ public class PostService {
   private final QuestionRepository questions;
   private final UserRepository users;
   private final ClaimAttemptRepository attempts;
+  private final VerifiedClaimRepository verifiedClaims;
   private final PasswordEncoder encoder;
 
   private static String norm(String s) { return s == null ? "" : s.trim().toLowerCase(Locale.ROOT); }
@@ -77,6 +79,39 @@ public class PostService {
     return posts.findByOwnerIdOrderByCreatedAtDesc(u.getId()).stream()
       .map(p -> toSummary(p, username))
       .toList();
+  }
+
+  private ClaimView toClaimView(VerifiedClaim claim) {
+    return new ClaimView(claim.getId(), claim.getOriginalPostId(), claim.getItemTitle(),
+      claim.getItemCategory(), claim.getItemLocation(), claim.getFinderId(),
+      claim.getFinderName(), claim.getFinderContact(), claim.getClaimantId(),
+      claim.getClaimantName(), claim.getVerifiedAt(), claim.getStatus());
+  }
+
+  @Transactional(readOnly = true)
+  public List<ClaimView> claimsByClaimant(String username) {
+    User claimant = user(username);
+    return verifiedClaims.findByClaimantIdOrderByVerifiedAtDesc(claimant.getId())
+      .stream().map(this::toClaimView).toList();
+  }
+
+  @Transactional(readOnly = true)
+  public List<ClaimView> claimsByFinder(String username) {
+    User finder = user(username);
+    return verifiedClaims.findByFinderIdOrderByVerifiedAtDesc(finder.getId())
+      .stream().map(this::toClaimView).toList();
+  }
+
+  @Transactional(readOnly = true)
+  public ClaimView claimDetails(String username, Long claimId) {
+    User requester = user(username);
+    VerifiedClaim claim = verifiedClaims.findById(claimId)
+      .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Claim not found"));
+    if (!claim.getClaimantId().equals(requester.getId())
+        && !claim.getFinderId().equals(requester.getId())) {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You cannot view this claim");
+    }
+    return toClaimView(claim);
   }
 
   private boolean locationMatches(String a, String b) {
@@ -164,14 +199,20 @@ public class PostService {
   @Transactional
   public Map<String, Object> claim(String username, Long postId, ClaimRequest req) {
     User user = user(username);
-    Post post = posts.findById(postId)
+    Post post = posts.findByIdForUpdate(postId)
       .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found"));
+    if (post.getOwner().getId().equals(user.getId()))
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You cannot claim your own post");
+    Optional<VerifiedClaim> priorClaim = verifiedClaims.findByOriginalPostId(postId);
+    if (priorClaim.isPresent()) {
+      VerifiedClaim saved = priorClaim.get();
+      if (saved.getClaimantId().equals(user.getId())) return claimResult(saved);
+      throw new ResponseStatusException(HttpStatus.CONFLICT, "This item has already been claimed");
+    }
     if (!"OPEN".equals(post.getStatus()))
       throw new ResponseStatusException(HttpStatus.CONFLICT, "This item has already been claimed");
     if (!"FOUND".equals(post.getType()))
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only found item reports can be claimed");
-    if (post.getOwner().getId().equals(user.getId()))
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You cannot claim your own post");
     ClaimAttempt a = attempts.findByUserIdAndPostId(user.getId(), postId).orElseGet(() -> {
       ClaimAttempt n = new ClaimAttempt();
       n.setUserId(user.getId());
@@ -198,13 +239,19 @@ public class PostService {
       post.setStatus("CLAIMED");
       post.setClaimedBy(user);
       posts.save(post);
-      result.put("verified", true);
-      result.put("finder", post.getOwner().getUsername());
-      result.put("contact", post.getOwner().getContact());
-      result.put("item", post.getTitle());
-      result.put("location", post.getLocation());
-      result.put("type", post.getType() == null ? "FOUND" : post.getType());
-      return result;
+      VerifiedClaim claim = new VerifiedClaim();
+      claim.setOriginalPostId(post.getId());
+      claim.setItemTitle(post.getTitle());
+      claim.setItemCategory(post.getCategory());
+      claim.setItemLocation(post.getLocation());
+      claim.setFinderId(post.getOwner().getId());
+      claim.setFinderName(post.getOwner().getUsername());
+      claim.setFinderContact(post.getOwner().getContact());
+      claim.setClaimantId(user.getId());
+      claim.setClaimantName(user.getUsername());
+      claim.setVerifiedAt(LocalDateTime.now());
+      claim.setStatus("SUCCESSFUL");
+      return claimResult(verifiedClaims.save(claim));
     }
     a.setFailures(a.getFailures() + 1);
     if (a.getFailures() >= 3) {
@@ -214,6 +261,23 @@ public class PostService {
     attempts.save(a);
     result.put("verified", false);
     result.put("message", "Verification failed");
+    return result;
+  }
+
+  private Map<String, Object> claimResult(VerifiedClaim claim) {
+    Map<String, Object> result = new HashMap<>();
+    result.put("verified", true);
+    result.put("claimId", claim.getId());
+    result.put("originalPostId", claim.getOriginalPostId());
+    result.put("finder", claim.getFinderName());
+    result.put("contact", claim.getFinderContact());
+    result.put("item", claim.getItemTitle());
+    result.put("category", claim.getItemCategory());
+    result.put("location", claim.getItemLocation());
+    result.put("type", "FOUND");
+    result.put("claimant", claim.getClaimantName());
+    result.put("verifiedAt", claim.getVerifiedAt());
+    result.put("status", claim.getStatus());
     return result;
   }
 }

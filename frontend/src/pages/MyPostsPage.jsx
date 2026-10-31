@@ -20,6 +20,7 @@ import {
   AlertCircle,
   RefreshCw,
   Pencil,
+  User,
 } from "lucide-react";
 
 const ICONS = { Phone: "📱", Wallet: "👛", Keys: "🔑", Bag: "🎒", Documents: "🪪", Other: "📦" };
@@ -27,13 +28,19 @@ const ICONS = { Phone: "📱", Wallet: "👛", Keys: "🔑", Bag: "🎒", Docume
 export default function MyPostsPage() {
   const nav = useNavigate();
   const [posts, setPosts] = useState(null);
+  const [claimedItems, setClaimedItems] = useState([]);
+  const [foundClaims, setFoundClaims] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingClaims, setLoadingClaims] = useState(true);
   const [fetchError, setFetchError] = useState("");
+  const [claimsError, setClaimsError] = useState("");
   const [deleteTargetId, setDeleteTargetId] = useState(null);
 
   const loadMyPosts = () => {
     setLoading(true);
+    setLoadingClaims(true);
     setFetchError("");
+    setClaimsError("");
     api("/api/posts/mine")
       .then((data) => setPosts(data || []))
       .catch((err) => {
@@ -41,6 +48,20 @@ export default function MyPostsPage() {
         setPosts([]);
       })
       .finally(() => setLoading(false));
+    Promise.all([
+      api("/api/claims/mine")
+        .then((data) => setClaimedItems(data || []))
+        .catch((err) => {
+          setClaimsError(err.message || "Failed to load your claimed items.");
+          setClaimedItems([]);
+        }),
+      api("/api/claims/found-by-me")
+        .then((data) => setFoundClaims(data || []))
+        .catch((err) => {
+          setClaimsError(err.message || "Failed to load successful claims on your posts.");
+          setFoundClaims([]);
+        }),
+    ]).finally(() => setLoadingClaims(false));
   };
 
   useEffect(() => {
@@ -57,6 +78,23 @@ export default function MyPostsPage() {
       alert(err.message || "Failed to delete post.");
     }
   };
+
+  const copyPhone = async (phone) => {
+    try {
+      await navigator.clipboard.writeText(phone);
+    } catch {
+      alert("Could not copy the number. You can still select and copy it manually.");
+    }
+  };
+
+  const formatClaimTime = (date) =>
+    new Date(date).toLocaleString([], {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
 
   return (
     <div className="page-workspace">
@@ -187,6 +225,99 @@ export default function MyPostsPage() {
             })}
           </div>
         )}
+
+        <section className="claim-history-section" aria-labelledby="my-claimed-items-heading">
+          <div className="claim-history-heading">
+            <div>
+              <h2 id="my-claimed-items-heading">My Claimed Items</h2>
+              <p>Items you successfully verified and the finder’s contact details.</p>
+            </div>
+          </div>
+          {claimsError && (
+            <div className="alert-box alert-error" role="alert">
+              <AlertCircle size={18} />
+              <div className="alert-text">
+                <span>{claimsError}</span>
+                <button type="button" className="btn-retry" onClick={loadMyPosts}>
+                  <RefreshCw size={14} /> Retry
+                </button>
+              </div>
+            </div>
+          )}
+          {loadingClaims && <PostListSkeleton count={1} />}
+          {!loadingClaims && !claimsError && claimedItems.length === 0 && (
+            <p className="claim-history-empty">You have no successfully verified claims yet.</p>
+          )}
+          {!loadingClaims && claimedItems.length > 0 && (
+            <div className="posts-grid">
+              {claimedItems.map((claim) => (
+                <article key={claim.id} className="post-card">
+                  <div className="post-card-inner">
+                    <div className="post-category-avatar">{ICONS[claim.itemCategory] || "📦"}</div>
+                    <div className="post-main-info">
+                      <div className="post-badges-row">
+                        <StatusBadge status="CLAIMED" />
+                      </div>
+                      <h3 className="post-title">{claim.itemTitle}</h3>
+                      <div className="post-metadata-row">
+                        <span className="meta-tag"><Tag size={13} />{claim.itemCategory}</span>
+                        <span className="meta-tag"><MapPin size={13} />{claim.itemLocation}</span>
+                        <span className="meta-tag"><Calendar size={13} />{formatClaimTime(claim.verifiedAt)}</span>
+                      </div>
+                      <p className="claim-history-contact">
+                        Finder: <strong>{claim.finderName}</strong> · <a href={`tel:${claim.finderContact}`}>{claim.finderContact}</a>
+                      </p>
+                      <div className="claim-history-actions">
+                        <a href={`tel:${claim.finderContact}`} className="btn btn-primary btn-sm">Call Finder</a>
+                        <button type="button" className="btn btn-secondary btn-sm" onClick={() => copyPhone(claim.finderContact)}>
+                          Copy Phone Number
+                        </button>
+                        <Link to={`/claims/${claim.id}`} className="btn btn-secondary btn-sm">View Claim Details</Link>
+                      </div>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section className="claim-history-section" aria-labelledby="successful-claims-heading">
+          <div className="claim-history-heading">
+            <div>
+              <h2 id="successful-claims-heading">Successfully Claimed Items</h2>
+              <p>Successful ownership verifications for items you posted.</p>
+            </div>
+          </div>
+          {loadingClaims && <PostListSkeleton count={1} />}
+          {!loadingClaims && !claimsError && foundClaims.length === 0 && (
+            <p className="claim-history-empty">No items you posted have been successfully claimed yet.</p>
+          )}
+          {!loadingClaims && foundClaims.length > 0 && (
+            <div className="posts-grid">
+              {foundClaims.map((claim) => (
+                <article key={claim.id} className="post-card">
+                  <div className="post-card-inner">
+                    <div className="post-category-avatar">{ICONS[claim.itemCategory] || "📦"}</div>
+                    <div className="post-main-info">
+                      <div className="post-badges-row">
+                        <StatusBadge status="CLAIMED" />
+                      </div>
+                      <h3 className="post-title">{claim.itemTitle}</h3>
+                      <div className="post-metadata-row">
+                        <span className="meta-tag"><User size={13} />Claimed by {claim.claimantName}</span>
+                        <span className="meta-tag"><Calendar size={13} />{formatClaimTime(claim.verifiedAt)}</span>
+                      </div>
+                    </div>
+                    <div className="post-actions-col">
+                      <Link to={`/claims/${claim.id}`} className="btn btn-secondary btn-sm">View Claim Details</Link>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
 
         {/* Delete Confirmation Modal */}
         <ConfirmModal

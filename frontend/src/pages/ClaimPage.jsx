@@ -28,6 +28,7 @@ export default function ClaimPage() {
   const [times, setTimes] = useState([]);
   const [result, setResult] = useState(null);
   const [loadingQuestions, setLoadingQuestions] = useState(true);
+  const [loadingSavedClaim, setLoadingSavedClaim] = useState(true);
   const [submittingClaim, setSubmittingClaim] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [copied, setCopied] = useState(false);
@@ -35,7 +36,13 @@ export default function ClaimPage() {
   const chatEndRef = useRef(null);
 
   useEffect(() => {
+    setQuestions(null);
+    setAnswers([]);
+    setTimes([]);
+    setStep(0);
+    setResult(null);
     setLoadingQuestions(true);
+    setLoadingSavedClaim(true);
     setErrorMsg("");
     api(`/api/posts/${id}/questions`)
       .then((qs) => {
@@ -45,6 +52,32 @@ export default function ClaimPage() {
         setErrorMsg(err.message || "Could not load verification questions.");
       })
       .finally(() => setLoadingQuestions(false));
+
+    api("/api/claims/mine")
+      .then((claims) => {
+        const savedClaim = (claims || []).find(
+          (claim) => String(claim.originalPostId) === String(id)
+        );
+        if (savedClaim) {
+          setResult({
+            verified: true,
+            claimId: savedClaim.id,
+            finder: savedClaim.finderName,
+            contact: savedClaim.finderContact,
+            item: savedClaim.itemTitle,
+            category: savedClaim.itemCategory,
+            location: savedClaim.itemLocation,
+            claimant: savedClaim.claimantName,
+            verifiedAt: savedClaim.verifiedAt,
+            status: savedClaim.status,
+            type: "FOUND",
+          });
+        }
+      })
+      .catch((err) => {
+        setErrorMsg(err.message || "Could not check your saved claim history.");
+      })
+      .finally(() => setLoadingSavedClaim(false));
   }, [id]);
 
   useEffect(() => {
@@ -171,7 +204,7 @@ export default function ClaimPage() {
               </div>
             </div>
 
-            {loadingQuestions && (
+            {(loadingQuestions || loadingSavedClaim) && (
               <div className="dialogue-loading-row">
                 <Loader2 size={20} className="animate-spin text-primary" />
                 <span>Loading verification questions...</span>
@@ -181,6 +214,7 @@ export default function ClaimPage() {
             {/* Render Questions and Answers */}
             {questions &&
               questions.map((q, idx) => {
+                if (result) return null;
                 if (idx > step) return null;
                 const hasAnswered = idx < answers.length;
 
@@ -217,7 +251,7 @@ export default function ClaimPage() {
                         </div>
                       </div>
                     ) : (
-                      !result && (
+                      !result && !loadingSavedClaim && (
                         <div className="dialogue-options-palette" aria-label="Choose your answer">
                           <span className="palette-instruction">Select the matching answer:</span>
                           <div className="options-buttons-grid">
@@ -314,6 +348,11 @@ export default function ClaimPage() {
                 )}
 
                 <div className="result-cta-row">
+                  {result.claimId && (
+                    <Link to={`/claims/${result.claimId}`} className="btn btn-secondary w-full">
+                      View Claim Details
+                    </Link>
+                  )}
                   <Link to="/feed" className="btn btn-primary w-full">
                     Return to Dashboard
                   </Link>
