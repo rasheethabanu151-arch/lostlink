@@ -28,6 +28,7 @@ public class SecurityConfig {
       .cors(Customizer.withDefaults())
       .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
       .authorizeHttpRequests(a -> a
+        .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/register").permitAll()
         .requestMatchers("/api/auth/**", "/api/health", "/api/health/db").permitAll()
         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
         .requestMatchers("/api/admin/**").hasRole("ADMIN")
